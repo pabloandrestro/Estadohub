@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const PAGE_SIZE_DEFAULT = 5;
-const DEBOUNCE_MS = 350;
 
 function normalizarRespuesta(json) {
     const filas = Array.isArray(json?.filas) ? json.filas : [];
@@ -40,8 +39,7 @@ function buildQuery({ q, estado, region, orden, page, pageSize, facetas }) {
 
 /**
  * Listado MP con filtros/paginación en servidor.
- * @param {string} modulo
- * @param {{ q?: string, estado?: string, region?: string, orden?: string, page?: number, pageSize?: number }} filtros
+ * `q` debe venir ya “aplicada” (Enter / lupa), no en cada tecla.
  */
 export function useMercadoPublico(modulo, filtros = {}) {
     const {
@@ -66,17 +64,10 @@ export function useMercadoPublico(modulo, filtros = {}) {
         pageSize: PAGE_SIZE_DEFAULT,
     });
 
-    const [qDebounced, setQDebounced] = useState(q);
     const abortRef = useRef(null);
     const facetasCargadas = useRef(false);
     const requestIdRef = useRef(0);
 
-    useEffect(() => {
-        const t = setTimeout(() => setQDebounced(q), DEBOUNCE_MS);
-        return () => clearTimeout(t);
-    }, [q]);
-
-    // Reset facetas al cambiar de módulo
     useEffect(() => {
         facetasCargadas.current = false;
     }, [modulo]);
@@ -100,7 +91,7 @@ export function useMercadoPublico(modulo, filtros = {}) {
 
         try {
             const qs = buildQuery({
-                q: qDebounced,
+                q,
                 estado,
                 region,
                 orden,
@@ -165,7 +156,7 @@ export function useMercadoPublico(modulo, filtros = {}) {
                 totalFiltrados: 0,
             }));
         }
-    }, [modulo, qDebounced, estado, region, orden, page, pageSize]);
+    }, [modulo, q, estado, region, orden, page, pageSize]);
 
     useEffect(() => {
         if (!modulo) return;

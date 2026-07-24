@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "enriquecer:detalle": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/register-alias.mjs ./scripts/enriquecer-detalle-loop.mjs"
+    "enriquecer:detalle": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/register-alias.mjs ./scripts/enriquecer-detalle-loop.mjs",
+    "indexar:busqueda": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/register-alias.mjs ./scripts/indexar-busqueda-loop.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

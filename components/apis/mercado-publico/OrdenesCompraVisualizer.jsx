@@ -5,6 +5,7 @@ import MpSubnav from "./MpSubnav";
 import MercadoPublicoTable from "./MercadoPublicoTable";
 import SkeletonTabla from "@/components/shared/SkeletonTabla";
 import { useMercadoPublico } from "./useMercadoPublico";
+import CampoBusquedaMp from "./CampoBusquedaMp";
 import AvisoDesdeDb from "./AvisoDesdeDb";
 import MercadoPublicoDetalleModal from "./MercadoPublicoDetalleModal";
 import EstadoBadge from "./EstadoBadge";
@@ -13,7 +14,8 @@ import { formatFechaMp, formatMoneyMp } from "@/lib/mercado-publico/formatMp";
 const PAGE_SIZE = 5;
 
 export default function OrdenesCompraVisualizer() {
-    const [busqueda, setBusqueda] = useState("");
+    const [textoBusqueda, setTextoBusqueda] = useState("");
+    const [consulta, setConsulta] = useState("");
     const [estadoFiltro, setEstadoFiltro] = useState("");
     const [orden, setOrden] = useState("");
     const [pagina, setPagina] = useState(1);
@@ -22,16 +24,21 @@ export default function OrdenesCompraVisualizer() {
 
     useEffect(() => {
         setPagina(1);
-    }, [busqueda, estadoFiltro, orden]);
+    }, [consulta, estadoFiltro, orden]);
 
     const { data, loading, refreshing, error, total, totalFiltrados, estados } =
         useMercadoPublico("ordenes-compra", {
-            q: busqueda,
+            q: consulta,
             estado: estadoFiltro,
             orden,
             page: pagina,
             pageSize: PAGE_SIZE,
         });
+
+    function aplicarBusqueda() {
+        setConsulta(textoBusqueda.trim());
+        setPagina(1);
+    }
 
     const dataActualizada = useMemo(
         () => data.map((r) => (parches[r.codigo] ? { ...r, ...parches[r.codigo] } : r)),
@@ -42,7 +49,7 @@ export default function OrdenesCompraVisualizer() {
         setParches((prev) => ({ ...prev, [fila.codigo]: fila }));
     }
 
-    const hayFiltros = Boolean(busqueda || estadoFiltro);
+    const hayFiltros = Boolean(consulta || estadoFiltro);
     const mostrandoCarga = loading && data.length === 0;
 
     const columns = [
@@ -191,21 +198,11 @@ export default function OrdenesCompraVisualizer() {
                     padding: "1.1rem",
                 }}
             >
-                <input
-                    type="text"
+                <CampoBusquedaMp
+                    valor={textoBusqueda}
+                    onCambiar={setTextoBusqueda}
+                    onBuscar={aplicarBusqueda}
                     placeholder="Buscar por código, proveedor o comprador..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="min-w-0 flex-1 basis-full sm:basis-56 sm:min-w-[200px]"
-                    style={{
-                        padding: "0.7rem 0.9rem",
-                        borderRadius: "0.75rem",
-                        border: "1px solid var(--border)",
-                        background: "var(--surface-2)",
-                        color: "var(--text-secondary)",
-                        fontSize: "0.84rem",
-                        outline: "none",
-                    }}
                 />
 
                 <select
@@ -255,7 +252,8 @@ export default function OrdenesCompraVisualizer() {
                     <button
                         type="button"
                         onClick={() => {
-                            setBusqueda("");
+                            setTextoBusqueda("");
+                            setConsulta("");
                             setEstadoFiltro("");
                         }}
                         style={{

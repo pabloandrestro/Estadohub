@@ -16,11 +16,23 @@ import {
     resolverOrdenMp,
     sanitizarBusquedaMp,
 } from "@/lib/mercado-publico/consultaListadoMp";
+import { ordenarFilasMp } from "@/lib/mercado-publico/ordenarFilasMp";
 import { ESTADOS_FACETA, REGIONES_FACETA, fusionarFacetas } from "@/lib/mercado-publico/facetasMp";
+import {
+    convieneBusquedaPorSimilitud,
+    consultarParecidosMp,
+} from "@/services/mercado-publico/buscarPorSimilitudMp";
 
 const DIAS_RETENCION = 7;
 const PAGE_SIZE_DEFAULT = 5;
 const PAGE_SIZE_MAX = 50;
+
+/** Campos UI para reordenar resultados semánticos cuando el usuario elige precio/fecha. */
+const CAMPOS_ORDEN_UI = {
+    licitaciones: { monto: "montoEstimado", fecha: "fechaCierre" },
+    "ordenes-compra": { monto: "montoTotal", fecha: "fecha" },
+    "compra-agil": { monto: "monto", fecha: "fechaCierre" },
+};
 
 const TABLAS = {
     licitaciones: {
@@ -219,6 +231,7 @@ function aplicarFiltrosUsuario(consulta, modulo, { q, estado, region }) {
 /**
  * Listado paginado + filtros en BD.
  * Mantiene total del módulo (solo filtros base) y total filtrado (base + usuario).
+ * Con q + AI_BUSQUEDA_ENABLE: intenta ranking semántico (CA/licitaciones); si falla o 0 hits → ilike.
  */
 export async function listarFilasMercadoPublico(
     modulo,
@@ -246,15 +259,101 @@ export async function listarFilasMercadoPublico(
 
     const ordenResuelto = resolverOrdenMp(modulo, orden, config.orden);
     const filtrosUsuario = { q, estado, region };
-    const hayFiltroUsuario = Boolean(sanitizarBusquedaMp(q) || estado || (region && modulo === "compra-agil"));
+    const busqueda = sanitizarBusquedaMp(q);
+    const hayFiltroUsuario = Boolean(busqueda || estado || (region && modulo === "compra-agil"));
 
-    // Total del módulo (solo retención/vigencia)
     const countModuloPromise = aplicarFiltrosBase(
         supabase.from(tabla).select("codigo", { count: "exact", head: true }),
         config
     );
+    const facetasPromise = incluirFacetas
+        ? listarFacetasLivianas(supabase, modulo, config)
+        : Promise.resolve(null);
 
-    // Página filtrada
+    // Rama semántica: ranking por parecido; si el usuario elige precio/fecha, reordena ese set.
+    if (convieneBusquedaPorSimilitud(modulo, q)) {
+        try {
+            const { parecidos, interpretacion } = await consultarParecidosMp(modulo, {
+                textoConsulta: busqueda,
+                estado,
+                region: modulo === "compra-agil" ? region : "",
+                maxResultados: PAGE_SIZE_MAX,
+            });
+
+            if (parecidos.length > 0) {
+                const codigosOrdenados = parecidos.map((p) => p.codigo).filter(Boolean);
+                const { data: filasDb, error: errorFilas } = await supabase
+                    .from(tabla)
+                    .select(columnasListado)
+                    .in("codigo", codigosOrdenados);
+
+                if (errorFilas) throw errorFilas;
+
+                const porCodigo = new Map((filasDb ?? []).map((row) => [row.codigo, row]));
+                let filasUi = codigosOrdenados
+                    .map((codigo) => porCodigo.get(codigo))
+                    .filter(Boolean)
+                    .map(dbAUi);
+
+                const camposUi = CAMPOS_ORDEN_UI[modulo] ?? {
+                    monto: "monto",
+                    fecha: "fechaCierre",
+                };
+                if (orden && (orden.startsWith("precio") || orden.startsWith("fecha"))) {
+                    filasUi = ordenarFilasMp(
+                        filasUi,
+                        orden,
+                        camposUi.monto,
+                        camposUi.fecha
+                    );
+                }
+
+                const totalFiltrados = filasUi.length;
+                const filasPagina = filasUi.slice(from, to);
+
+                const [countModuloRes, facetas] = await Promise.all([
+                    countModuloPromise,
+                    facetasPromise,
+                ]);
+                if (countModuloRes.error) throw countModuloRes.error;
+
+                const estadosEnPagina = filasPagina.map((f) => f.estado).filter(Boolean);
+                const regionesEnPagina = filasPagina.map((f) => f.region).filter(Boolean);
+                const estadosBase = facetas?.estados ?? ESTADOS_FACETA[modulo] ?? [];
+                const regionesBase =
+                    modulo === "compra-agil" ? (facetas?.regiones ?? REGIONES_FACETA) : [];
+
+                return {
+                    filas: filasPagina,
+                    totalRegistros: countModuloRes.count ?? totalFiltrados,
+                    totalFiltrados,
+                    pagina,
+                    pageSize: size,
+                    estados: fusionarFacetas(estadosBase, estadosEnPagina),
+                    regiones:
+                        modulo === "compra-agil"
+                            ? fusionarFacetas(regionesBase, regionesEnPagina)
+                            : [],
+                    busquedaPorSimilitud: true,
+                    interpretacionConsulta: {
+                        textoSemantico: interpretacion.textoSemantico,
+                        montoMaximo: interpretacion.montoMaximo,
+                        montoMinimo: interpretacion.montoMinimo,
+                        region: interpretacion.regionEtiqueta || null,
+                        fuente: interpretacion.fuente,
+                    },
+                };
+            }
+            // 0 hits → cae a ilike (útil para códigos exactos sin vector cercano)
+        } catch (error) {
+            console.warn(
+                `[listado MP] similitud falló (${modulo}), uso ilike:`,
+                error?.message || error
+            );
+        }
+    }
+
+    // Página filtrada (ilike / filtros clásicos)
     let consulta = aplicarFiltrosBase(
         supabase.from(tabla).select(columnasListado, { count: "exact" }),
         config
@@ -268,10 +367,6 @@ export async function listarFilasMercadoPublico(
                 : {}),
         })
         .range(from, to);
-
-    const facetasPromise = incluirFacetas
-        ? listarFacetasLivianas(supabase, modulo, config)
-        : Promise.resolve(null);
 
     const [countModuloRes, dataRes, facetas] = await Promise.all([
         countModuloPromise,
@@ -304,6 +399,7 @@ export async function listarFilasMercadoPublico(
             modulo === "compra-agil"
                 ? fusionarFacetas(regionesBase, regionesEnPagina)
                 : [],
+        busquedaPorSimilitud: false,
     };
 }
 
@@ -472,4 +568,88 @@ export async function listarPendientesDetalle(modulo, limite = 10) {
     }
 
     return pendientes;
+}
+
+/** Columnas mínimas para armar texto_indice (sin payload pesado innecesario). */
+const COLUMNAS_PARA_INDICE = {
+    licitaciones:
+        "codigo, nombre, organismo, nombre_unidad, descripcion, items, payload, indexado_en",
+    "compra-agil":
+        "codigo, nombre, organismo, descripcion, productos, payload, indexado_en",
+    "ordenes-compra":
+        "codigo, nombre, comprador, proveedor, actividad_comprador, actividad_proveedor, " +
+        "descripcion, items, fecha, payload, indexado_en",
+};
+
+function filaTieneDetalleParaIndice(modulo, row) {
+    if (modulo === "ordenes-compra") {
+        return Boolean(row?.fecha);
+    }
+    return tieneDetalleEnPayload(modulo, row?.payload);
+}
+
+/**
+ * Filas con detalle útil, dentro de la ventana del módulo, aún sin indexar.
+ * Solo lectura — no modifica datos del cliente.
+ */
+export async function listarPendientesIndice(modulo, limite = 5) {
+    const config = getConfig(modulo);
+    const { tabla, orden } = config;
+    const supabase = getSupabaseAdmin();
+    const columnas = COLUMNAS_PARA_INDICE[modulo] || "codigo, nombre, descripcion, indexado_en";
+    const cupo = Math.max(1, Math.min(limite, 20));
+    const pageSize = 80;
+    const maxScan = 1600;
+    const pendientes = [];
+
+    for (let from = 0; from < maxScan && pendientes.length < cupo; from += pageSize) {
+        let consulta = supabase
+            .from(tabla)
+            .select(columnas)
+            .is("indexado_en", null)
+            .order(orden.columna, { ascending: orden.ascendente })
+            .range(from, from + pageSize - 1);
+
+        consulta = aplicarFiltrosBase(consulta, config);
+
+        const { data, error } = await consulta;
+        if (error) throw error;
+        if (!data?.length) break;
+
+        for (const row of data) {
+            if (!filaTieneDetalleParaIndice(modulo, row)) continue;
+            pendientes.push(row);
+            if (pendientes.length >= cupo) break;
+        }
+
+        if (data.length < pageSize) break;
+    }
+
+    return pendientes;
+}
+
+/**
+ * Guarda vector + texto. Solo toca las 3 columnas de índice (no pisa detalle ni payload).
+ * @param {number[]|null} vectorLista array de 1536 floats, o null si se omite sin texto
+ */
+export async function guardarIndiceBusqueda(modulo, codigo, {
+    textoIndice = null,
+    vectorLista = null,
+} = {}) {
+    const { tabla } = getConfig(modulo);
+    const supabase = getSupabaseAdmin();
+
+    const patch = {
+        texto_indice: textoIndice,
+        indexado_en: ahoraIso(),
+        vector_busqueda: Array.isArray(vectorLista) ? JSON.stringify(vectorLista) : null,
+    };
+
+    const { error } = await supabase
+        .from(tabla)
+        .update(patch)
+        .eq("codigo", codigo);
+
+    if (error) throw error;
+    return { codigo, indexado: Boolean(vectorLista) };
 }
