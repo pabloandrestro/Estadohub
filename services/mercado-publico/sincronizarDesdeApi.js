@@ -2,8 +2,8 @@ import { fetchMercadoPublico } from "@/services/mercado-publico/mercadoPublicoCl
 import { fetchCompraAgil } from "@/services/mercado-publico/fetchCompraAgil";
 import { mapLicitacion, mapOrdenCompra, mapCompraAgil } from "@/services/mercado-publico/mercadoPublicoMapper";
 import { extraerListado } from "@/lib/mercado-publico/extraerListado";
+import { DIAS_RETENCION_CA } from "@/lib/mercado-publico/constantesMp";
 import {
-    DIAS_RETENCION,
     upsertFilasMercadoPublico,
     borrarRegistrosAntiguos,
 } from "@/services/supabase/mercadoPublicoRepo";
@@ -138,7 +138,7 @@ export async function sincronizarComprasAgilesDesdeApi({
     estado = "",
     region = "",
     textoBusqueda = "",
-    diasAtras = DIAS_RETENCION,
+    diasAtras = DIAS_RETENCION_CA,
     onProgreso,
 } = {}) {
     const rango = obtenerRangoPublicacion(diasAtras);

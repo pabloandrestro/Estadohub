@@ -116,4 +116,4 @@ export async function indexarBusquedaMercadoPublico({
     };
 }
 
-export { MODULOS_DEFAULT, MODULOS_PERMITIDOS };
+export { MODULOS_DEFAULT };

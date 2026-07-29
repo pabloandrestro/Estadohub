@@ -190,7 +190,7 @@ export default function LicitacionesVisualizer() {
             <div
                 style={{
                     display: "flex",
-                    flexWrap: "wrap",
+                    flexDirection: "column",
                     gap: "0.75rem",
                     borderRadius: "1rem",
                     border: "1px solid var(--border)",
@@ -198,77 +198,82 @@ export default function LicitacionesVisualizer() {
                     padding: "1.1rem",
                 }}
             >
-                <CampoBusquedaMp
-                    valor={textoBusqueda}
-                    onCambiar={setTextoBusqueda}
-                    onBuscar={aplicarBusqueda}
-                    placeholder="Buscar por código o título..."
-                />
+                <div className="flex min-w-0 flex-wrap gap-3">
+                    <CampoBusquedaMp
+                        valor={textoBusqueda}
+                        onCambiar={setTextoBusqueda}
+                        onBuscar={aplicarBusqueda}
+                        placeholder="Buscar por código o título..."
+                    />
 
-                <select
-                    value={estadoFiltro}
-                    onChange={(e) => setEstadoFiltro(e.target.value)}
-                    className="min-w-0 flex-1 basis-full sm:basis-40 sm:min-w-[140px]"
-                    style={{
-                        padding: "0.7rem 0.9rem",
-                        borderRadius: "0.75rem",
-                        border: "1px solid var(--border)",
-                        background: "var(--surface-2)",
-                        color: "var(--text-secondary)",
-                        fontSize: "0.84rem",
-                        outline: "none",
-                    }}
-                >
-                    <option value="">Todos los estados</option>
-                    {estados.map((e) => (
-                        <option key={e} value={e}>
-                            {e}
-                        </option>
-                    ))}
-                </select>
-
-                <select
-                    value={orden}
-                    onChange={(e) => setOrden(e.target.value)}
-                    className="min-w-0 flex-1 basis-full sm:basis-44 sm:min-w-[160px]"
-                    style={{
-                        padding: "0.7rem 0.9rem",
-                        borderRadius: "0.75rem",
-                        border: "1px solid var(--border)",
-                        background: "var(--surface-2)",
-                        color: "var(--text-secondary)",
-                        fontSize: "0.84rem",
-                        outline: "none",
-                    }}
-                >
-                    <option value="">Orden predeterminado</option>
-                    <option value="precio-desc">Precio (Mayor a menor)</option>
-                    <option value="precio-asc">Precio (Menor a mayor)</option>
-                    <option value="fecha-desc">Fecha (Mayor a menor)</option>
-                    <option value="fecha-asc">Fecha (Menor a mayor)</option>
-                </select>
-
-                {hayFiltros && (
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setTextoBusqueda("");
-                            setConsulta("");
-                            setEstadoFiltro("");
-                        }}
+                    <select
+                        value={orden}
+                        onChange={(e) => setOrden(e.target.value)}
+                        className="min-w-0 flex-1 basis-[10rem]"
                         style={{
                             padding: "0.7rem 0.9rem",
                             borderRadius: "0.75rem",
-                            border: "1px solid var(--danger)",
-                            background: "transparent",
-                            color: "var(--danger)",
+                            border: "1px solid var(--border)",
+                            background: "var(--surface-2)",
+                            color: "var(--text-secondary)",
                             fontSize: "0.84rem",
-                            cursor: "pointer",
+                            outline: "none",
                         }}
                     >
-                        Limpiar filtros
-                    </button>
-                )}
+                        <option value="">Orden predeterminado</option>
+                        <option value="precio-desc">Precio (Mayor a menor)</option>
+                        <option value="precio-asc">Precio (Menor a mayor)</option>
+                        <option value="fecha-desc">Fecha (Mayor a menor)</option>
+                        <option value="fecha-asc">Fecha (Menor a mayor)</option>
+                    </select>
+                </div>
+
+                <div className="flex min-w-0 flex-wrap gap-3">
+                    <select
+                        value={estadoFiltro}
+                        onChange={(e) => setEstadoFiltro(e.target.value)}
+                        className="min-w-0 flex-1 basis-[9rem]"
+                        style={{
+                            padding: "0.7rem 0.9rem",
+                            borderRadius: "0.75rem",
+                            border: "1px solid var(--border)",
+                            background: "var(--surface-2)",
+                            color: "var(--text-secondary)",
+                            fontSize: "0.84rem",
+                            outline: "none",
+                        }}
+                    >
+                        <option value="">Todos los estados</option>
+                        {estados.map((e) => (
+                            <option key={e} value={e}>
+                                {e}
+                            </option>
+                        ))}
+                    </select>
+
+                    {hayFiltros && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setTextoBusqueda("");
+                                setConsulta("");
+                                setEstadoFiltro("");
+                            }}
+                            className="shrink-0"
+                            style={{
+                                padding: "0.7rem 0.9rem",
+                                borderRadius: "0.75rem",
+                                border: "1px solid var(--danger)",
+                                background: "transparent",
+                                color: "var(--danger)",
+                                fontSize: "0.84rem",
+                                cursor: "pointer",
+                            }}
+                        >
+                            Limpiar filtros
+                        </button>
+                    )}
+                </div>
             </div>
 
             {mostrandoCarga ? (

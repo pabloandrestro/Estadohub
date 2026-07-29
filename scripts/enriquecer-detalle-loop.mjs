@@ -8,8 +8,9 @@
  *   npm run enriquecer:detalle
  *
  * Variables opcionales (.env.local o entorno):
- *   ENRIQUECER_INTERVAL_MS=2000   pausa entre cada detalle
+ *   ENRIQUECER_INTERVAL_MS=1000   pausa entre cada detalle (default 1s con 2 tickets)
  *   ENRIQUECER_LIMITE=1           detalles por ciclo (por módulo activo)
+ *   MERCADO_PUBLICO_TICKET_2=…   segundo ticket: alterna con el 1º (menos 429)
  *
  * Requiere: MERCADO_PUBLICO_TICKET, NEXT_PUBLIC_SUPABASE_URL,
  *           SUPABASE_SERVICE_ROLE_KEY
@@ -22,11 +23,14 @@ import { loadEnvLocal } from "./load-env.mjs";
 loadEnvLocal();
 
 const MODULOS = ["licitaciones", "compra-agil", "ordenes-compra"];
-const INTERVAL_MS = Math.max(1000, Number(process.env.ENRIQUECER_INTERVAL_MS) || 2000);
+const INTERVAL_MS = Math.max(1000, Number(process.env.ENRIQUECER_INTERVAL_MS) || 1000);
 const LIMITE = Math.max(1, Number(process.env.ENRIQUECER_LIMITE) || 1);
 
 const { enriquecerDetalleMercadoPublico } = await import(
     "../services/mercado-publico/enriquecerDetalleMercadoPublico.js"
+);
+const { cantidadTicketsMercadoPublico } = await import(
+    "../lib/mercado-publico/ticketMercadoPublico.js"
 );
 
 function esperar(ms) {
@@ -59,8 +63,14 @@ function detener(senal) {
 process.on("SIGINT", () => detener("SIGINT"));
 process.on("SIGTERM", () => detener("SIGTERM"));
 
+const nTickets = cantidadTicketsMercadoPublico();
 console.log(`[${stamp()}] Inicio enriquecer-detalle-loop`);
-console.log(`  intervalo=${INTERVAL_MS}ms  limite=${LIMITE}  módulos=${MODULOS.join(", ")}`);
+console.log(
+    `  intervalo=${INTERVAL_MS}ms  limite=${LIMITE}  tickets=${nTickets}  módulos=${MODULOS.join(", ")}`
+);
+if (nTickets > 1) {
+    console.log("  Alternando MERCADO_PUBLICO_TICKET ↔ MERCADO_PUBLICO_TICKET_2 por llamada.");
+}
 console.log("  Ctrl+C para detener.\n");
 
 while (continuar) {

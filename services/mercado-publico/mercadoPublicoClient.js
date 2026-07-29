@@ -1,3 +1,5 @@
+import { obtenerTicketMercadoPublico } from "@/lib/mercado-publico/ticketMercadoPublico";
+
 const MP_API_BASE = "https://api.mercadopublico.cl/servicios/v1/publico";
 
 function limpiarUrlParaLog(urlString) {
@@ -7,11 +9,7 @@ function limpiarUrlParaLog(urlString) {
 }
 
 export async function fetchMercadoPublico(rutaRelativa, params = {}) {
-    const ticket = process.env.MERCADO_PUBLICO_TICKET;
-
-    if (!ticket) {
-        throw new Error("MERCADO_PUBLICO_TICKET no configurado en .env.local");
-    }
+    const ticket = obtenerTicketMercadoPublico();
 
     const url = new URL(`${MP_API_BASE}${rutaRelativa}`);
     url.searchParams.set("ticket", ticket);

@@ -1,19 +1,10 @@
 import { lanzarErrorMercadoPublico } from "@/services/mercado-publico/erroresMercadoPublico";
+import { obtenerTicketMercadoPublico } from "@/lib/mercado-publico/ticketMercadoPublico";
 
 const BASE_COMPRA_AGIL = "https://api2.mercadopublico.cl";
 
-function leerTicket() {
-    const ticket = process.env.MERCADO_PUBLICO_TICKET;
-
-    if (!ticket) {
-        throw new Error("MERCADO_PUBLICO_TICKET no configurado en .env.local");
-    }
-
-    return ticket;
-}
-
 export async function fetchCompraAgil(rutaRelativa, { parametros = {} } = {}) {
-    const ticket = leerTicket();
+    const ticket = obtenerTicketMercadoPublico();
     const url = new URL(`${BASE_COMPRA_AGIL}${rutaRelativa}`);
 
     Object.entries(parametros).forEach(([clave, valor]) => {

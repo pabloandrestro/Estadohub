@@ -21,13 +21,16 @@ import { ESTADOS_FACETA, REGIONES_FACETA, fusionarFacetas } from "@/lib/mercado-
 import {
     convieneBusquedaPorSimilitud,
     consultarParecidosMp,
+    MAX_HITS,
+    logPipeline,
 } from "@/services/mercado-publico/buscarPorSimilitudMp";
+import { busquedaAiHabilitada } from "@/lib/ai/generarVectorBusqueda";
+import { DIAS_RETENCION_CA } from "@/lib/mercado-publico/constantesMp";
 
-const DIAS_RETENCION = 7;
 const PAGE_SIZE_DEFAULT = 5;
 const PAGE_SIZE_MAX = 50;
 
-/** Campos UI para reordenar resultados semánticos cuando el usuario elige precio/fecha. */
+/** Campos UI para reordenar el set semántico cuando eligen precio/fecha. */
 const CAMPOS_ORDEN_UI = {
     licitaciones: { monto: "montoEstimado", fecha: "fechaCierre" },
     "ordenes-compra": { monto: "montoTotal", fecha: "fecha" },
@@ -56,12 +59,10 @@ const TABLAS = {
         dbAUi: compraAgilDbAUi,
         columnasListado: COLUMNAS_LISTADO_COMPRA_AGIL,
         orden: { columna: "fecha_cierre", ascendente: false },
-        diasRetencion: DIAS_RETENCION,
+        diasRetencion: DIAS_RETENCION_CA,
         columnaRetencion: "fecha_creacion",
     },
 };
-
-export { DIAS_RETENCION };
 
 function getConfig(modulo) {
     const config = TABLAS[modulo];
@@ -270,14 +271,14 @@ export async function listarFilasMercadoPublico(
         ? listarFacetasLivianas(supabase, modulo, config)
         : Promise.resolve(null);
 
-    // Rama semántica: ranking por parecido; si el usuario elige precio/fecha, reordena ese set.
+    // Ranking por parecido; si eligen precio/fecha, reordena ese set
     if (convieneBusquedaPorSimilitud(modulo, q)) {
         try {
             const { parecidos, interpretacion } = await consultarParecidosMp(modulo, {
                 textoConsulta: busqueda,
                 estado,
                 region: modulo === "compra-agil" ? region : "",
-                maxResultados: PAGE_SIZE_MAX,
+                maxResultados: MAX_HITS,
             });
 
             if (parecidos.length > 0) {
@@ -309,7 +310,8 @@ export async function listarFilasMercadoPublico(
                 }
 
                 const totalFiltrados = filasUi.length;
-                const filasPagina = filasUi.slice(from, to);
+                // `to` es inclusivo (estilo .range); slice es exclusivo → from + size
+                const filasPagina = filasUi.slice(from, from + size);
 
                 const [countModuloRes, facetas] = await Promise.all([
                     countModuloPromise,
@@ -344,13 +346,38 @@ export async function listarFilasMercadoPublico(
                     },
                 };
             }
-            // 0 hits → cae a ilike (útil para códigos exactos sin vector cercano)
+            // Sin hits → ilike (códigos exactos u otros casos sin vecinos)
+            logPipeline({
+                modulo,
+                q: busqueda,
+                ruta: "ilike",
+                motivo: "hibrida_0_hits",
+            });
         } catch (error) {
             console.warn(
                 `[listado MP] similitud falló (${modulo}), uso ilike:`,
                 error?.message || error
             );
+            logPipeline({
+                modulo,
+                q: busqueda,
+                ruta: "ilike",
+                motivo: "hibrida_error",
+                error: error?.message || String(error),
+            });
         }
+    } else if (busqueda) {
+        const motivo = !busquedaAiHabilitada()
+            ? "ai_off"
+            : modulo !== "compra-agil" && modulo !== "licitaciones"
+              ? "modulo_sin_semantica"
+              : "q_corta";
+        logPipeline({
+            modulo,
+            q: busqueda,
+            ruta: "ilike",
+            motivo,
+        });
     }
 
     // Página filtrada (ilike / filtros clásicos)
@@ -440,11 +467,6 @@ async function listarFacetasLivianas(supabase, modulo, config) {
             : [];
 
     return { estados, regiones };
-}
-
-/** @deprecated preferir listarFilasMercadoPublico con page/pageSize */
-export async function listarOrdenesCompra(opts = {}) {
-    return listarFilasMercadoPublico("ordenes-compra", opts);
 }
 
 export async function obtenerFilaPorCodigo(modulo, codigo) {
@@ -575,7 +597,8 @@ const COLUMNAS_PARA_INDICE = {
     licitaciones:
         "codigo, nombre, organismo, nombre_unidad, descripcion, items, payload, indexado_en",
     "compra-agil":
-        "codigo, nombre, organismo, descripcion, productos, payload, indexado_en",
+        "codigo, nombre, organismo, descripcion, productos, payload, indexado_en, " +
+        "direccion_entrega, fecha_cierre_primer_llamado",
     "ordenes-compra":
         "codigo, nombre, comprador, proveedor, actividad_comprador, actividad_proveedor, " +
         "descripcion, items, fecha, payload, indexado_en",
@@ -585,7 +608,38 @@ function filaTieneDetalleParaIndice(modulo, row) {
     if (modulo === "ordenes-compra") {
         return Boolean(row?.fecha);
     }
+    if (modulo === "compra-agil") {
+        const productos = row?.productos;
+        const tieneProductos = Array.isArray(productos) && productos.length > 0;
+        return Boolean(
+            row?.direccion_entrega ||
+                row?.fecha_cierre_primer_llamado ||
+                tieneProductos ||
+                tieneDetalleEnPayload(modulo, row?.payload)
+        );
+    }
     return tieneDetalleEnPayload(modulo, row?.payload);
+}
+
+/** Filtra en DB para no gastar el scan en filas sin detalle. */
+function aplicarFiltroDetalleIndice(consulta, modulo) {
+    if (modulo === "licitaciones") {
+        return consulta.not("payload->Comprador", "is", null);
+    }
+    if (modulo === "ordenes-compra") {
+        return consulta.not("fecha", "is", null);
+    }
+    if (modulo === "compra-agil") {
+        // Columnas de detalle (más fiable que solo payload anidado)
+        return consulta.or(
+            [
+                "direccion_entrega.not.is.null",
+                "fecha_cierre_primer_llamado.not.is.null",
+                "productos.neq.[]",
+            ].join(",")
+        );
+    }
+    return consulta;
 }
 
 /**
@@ -611,6 +665,7 @@ export async function listarPendientesIndice(modulo, limite = 5) {
             .range(from, from + pageSize - 1);
 
         consulta = aplicarFiltrosBase(consulta, config);
+        consulta = aplicarFiltroDetalleIndice(consulta, modulo);
 
         const { data, error } = await consulta;
         if (error) throw error;
