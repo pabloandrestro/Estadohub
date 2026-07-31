@@ -124,7 +124,8 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
     };
 
 
-
+    console.log("analisis coordenadas:", analisis?.coordenadas);
+    console.log("coordsMapa:", coordsMapa);
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
 
@@ -219,14 +220,15 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                         </div>
                     </div>
                     {/* Mapa */}
-                    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", minHeight: "200px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", minHeight: "480px", display: "flex", flexDirection: "column", gap: "8px" }}>
                         <CardHeader icono={Map} titulo="Ubicación del predio" color="var(--accent)" />
                         <MapaPredio
                             rol={rolSII}
                             direccion={direccion}
                             comuna={remate?.comuna || remate?.comunaJuzgado || raw?.comunaJuzgado || raw?.comuna || ""}
-                            fallbackLat={coordsMapa?.lat}
-                            fallbackLng={coordsMapa?.lng}
+                            fallbackLat={analisis?.coordenadas?.lat}
+                            fallbackLng={analisis?.coordenadas?.lon}
+                            coordsExactas={!!analisis?.coordenadas?.lat}
                         />
                     </div>
                 </div>

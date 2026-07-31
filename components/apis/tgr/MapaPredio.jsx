@@ -18,6 +18,7 @@ export default function MapaPredio({
     comuna,
     fallbackLat,
     fallbackLng,
+    coordsExactas = false
 }) {
     const [coords, setCoords] = useState(
         fallbackLat && fallbackLng
@@ -25,7 +26,7 @@ export default function MapaPredio({
             : null
     );
 
-    const [loading, setLoading] = useState(!coords);
+    const [loading, setLoading] = useState(!coords && !coordsExactas);
 
     useEffect(() => {
         let activo = true;
@@ -64,6 +65,11 @@ export default function MapaPredio({
             }
         }
 
+        if (coordsExactas) {
+        setLoading(false);
+        return; // ← salir inmediatamente
+        }
+        
         if (rol) {
             cargarCoordsExactas();
         }
@@ -71,7 +77,7 @@ export default function MapaPredio({
         return () => {
             activo = false;
         };
-    }, [rol, direccion, comuna]);
+    }, [rol, direccion, comuna, coordsExactas]);
 
     if (!coords && loading) {
         return (
@@ -91,7 +97,7 @@ export default function MapaPredio({
 
     return (
         <div style={{ width: "100%" }}>
-            <div style={{ height: "220px", width: "100%", borderRadius: "8px", overflow: "hidden" }}>
+            <div style={{ height: "480px", width: "100%", borderRadius: "8px", overflow: "hidden" }}>
                 <MapContainer
                     center={[coords.lat, coords.lng]}
                     zoom={17}
