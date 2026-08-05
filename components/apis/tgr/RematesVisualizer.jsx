@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
     Search,
     Building2,
@@ -11,61 +12,75 @@ import {
     RefreshCw,
 } from "lucide-react";
 import BotonesExportar from "@/components/shared/BotonesExportar";
-import FichaTecnicaModal from "@/components/apis/tgr/FichaTecnicaModal";
+import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
 import GraficoConcentracion from "@/components/apis/tgr/GraficoConcentracion";
-import TablaSwipeHint from "@/components/shared/TablaSwipeHint";
 import { formatCLP, formatCLPCompacto } from "@/utils/formatCurrency";
 
 const POR_PAGINA = 5;
 
-// ── KPI Card ──────────────────────────────────────────────────────────────────
 function KpiGrande({ icono: Icono, titulo, valor, color }) {
     return (
-        <div className="kpi-tgr">
+        <div
+            style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                padding: "1.1rem 1.25rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.875rem",
+            }}
+        >
             <div
-                className="kpi-tgr-icon"
                 style={{
                     background: `color-mix(in srgb, ${color} 12%, transparent)`,
                     border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
+                    borderRadius: "10px",
+                    padding: "0.6rem",
+                    flexShrink: 0,
                 }}
             >
                 <Icono size={18} style={{ color }} />
             </div>
-            <div style={{ minWidth: 0, width: "100%" }}>
-                <p className="kpi-tgr-label">{titulo}</p>
-                <p className="kpi-tgr-value" style={{ color }}>{valor}</p>
+            <div>
+                <p
+                    style={{
+                        color: "var(--text-muted)",
+                        fontSize: "0.65rem",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        marginBottom: "2px",
+                    }}
+                >
+                    {titulo}
+                </p>
+                <p
+                    style={{
+                        color,
+                        fontSize: "1.25rem",
+                        fontWeight: 800,
+                        fontFamily: "monospace",
+                    }}
+                >
+                    {valor}
+                </p>
             </div>
         </div>
     );
 }
 
-function CeldaTruncada({ children, title, maxWidth = "220px" }) {
-    return (
-        <span
-            title={title}
-            className="block min-w-0 truncate"
-            style={{ maxWidth }}
-        >
-            {children}
-        </span>
-    );
-}
-
-// ── Componente principal ──────────────────────────────────────────────────────
 export default function RematesVisualizer({ datos = [] }) {
+    const router = useRouter();
     const [busqueda, setBusqueda] = useState("");
     const [comunaFiltro, setComunaFiltro] = useState("TODAS");
     const [pagina, setPagina] = useState(1);
-    const [fichaAbierta, setFichaAbierta] = useState(null);
     const [recargando, setRecargando] = useState(false);
 
-    // ── Comunas disponibles ───────────────────────────────────────────────────
     const comunas = useMemo(() => {
         const set = new Set(datos.map((d) => d.comunaJuzgado).filter(Boolean));
         return ["TODAS", ...Array.from(set).sort()];
     }, [datos]);
 
-    // ── Datos filtrados ───────────────────────────────────────────────────────
     const datosFiltrados = useMemo(() => {
         let res = datos;
         if (comunaFiltro !== "TODAS") {
@@ -83,7 +98,6 @@ export default function RematesVisualizer({ datos = [] }) {
         return res;
     }, [datos, busqueda, comunaFiltro]);
 
-    // ── KPIs — todos sobre montoMinimo con fallback a montoAvaluo ─────────────
     const totalMinimo = useMemo(
         () => datos.reduce((s, d) => s + (d.montoMinimo || d.montoAvaluo || 0), 0),
         [datos]
@@ -103,71 +117,65 @@ export default function RematesVisualizer({ datos = [] }) {
         [datos]
     );
 
-    // ── Paginación ────────────────────────────────────────────────────────────
     const totalPaginas = Math.ceil(datosFiltrados.length / POR_PAGINA);
     const datosPagina = datosFiltrados.slice(
         (pagina - 1) * POR_PAGINA,
         pagina * POR_PAGINA
     );
 
-    // ── Recarga forzada ───────────────────────────────────────────────────────
     async function forzarRecarga() {
         setRecargando(true);
         try {
             await fetch("/api/remates?recargar=1");
             window.location.reload();
-        } finally {
+        } catch {
             setRecargando(false);
         }
     }
 
-    // ── Columnas de la tabla ──────────────────────────────────────────────────
     const COLUMNAS = [
         {
             key: "nombreDuegno",
             label: "Deudor",
-            maxWidth: "180px",
-            render: (v) => {
-                const texto = v || "—";
-                return (
-                    <CeldaTruncada title={v || undefined} maxWidth="180px">
-                        <span style={{
-                            fontFamily: "monospace",
-                            fontWeight: 600,
-                            fontSize: "0.78rem",
-                            color: "var(--text-secondary)",
-                        }}>
-                            {texto}
-                        </span>
-                    </CeldaTruncada>
-                );
-            },
+            width: "32%",
+            render: (v) => (
+                <span
+                    title={v || undefined}
+                    className="tgr-celda-truncada"
+                >
+                    {v || "—"}
+                </span>
+            ),
         },
         {
             key: "direccionRol",
             label: "Ubicación",
-            maxWidth: "260px",
+            width: "38%",
             render: (v) => (
-                <CeldaTruncada title={v || undefined} maxWidth="260px">
-                    <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                        {v ?? "—"}
-                    </span>
-                </CeldaTruncada>
+                <span
+                    title={v || undefined}
+                    className="tgr-celda-truncada"
+                >
+                    {v ?? "—"}
+                </span>
             ),
         },
         {
             key: "montoMinimo",
             label: "Tasación",
+            width: "18%",
             render: (v, fila) => {
                 const monto = v || fila.montoAvaluo;
                 return (
-                    <span style={{
-                        color: monto ? "var(--success)" : "var(--text-muted)",
-                        fontFamily: "monospace",
-                        fontWeight: 700,
-                        fontSize: "0.8rem",
-                        whiteSpace: "nowrap",
-                    }}>
+                    <span
+                        style={{
+                            color: monto ? "var(--success)" : "var(--text-muted)",
+                            fontFamily: "monospace",
+                            fontWeight: 700,
+                            fontSize: "0.8rem",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
                         {monto ? formatCLP(monto) : "—"}
                     </span>
                 );
@@ -176,10 +184,13 @@ export default function RematesVisualizer({ datos = [] }) {
         {
             key: "_accion",
             label: "Acciones",
-            sticky: true,
+            width: "12%",
             render: (_, fila) => (
                 <button
-                    onClick={() => setFichaAbierta(fila)}
+                    onClick={() => {
+                        const rolFormato = fila._raw?.rolFormato;
+                        if (rolFormato) router.push(`/dashboard/tgr/${encodeURIComponent(rolFormato)}`);
+                    }}
                     style={{
                         background: "var(--surface-2)",
                         border: "1px solid var(--accent)",
@@ -201,51 +212,24 @@ export default function RematesVisualizer({ datos = [] }) {
         },
     ];
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div className="flex min-w-0 flex-col gap-5 sm:gap-6">
 
             {/* KPIs */}
             <div className="kpi-grid kpi-grid--4">
-                <KpiGrande
-                    icono={Building2}
-                    titulo="Propiedades Únicas"
-                    valor={datos.length.toLocaleString("es-CL")}
-                    color="var(--accent)"
-                />
-                <KpiGrande
-                    icono={Wallet}
-                    titulo="Volumen Real"
-                    valor={formatCLPCompacto(totalMinimo)}
-                    color="var(--success)"
-                />
-                <KpiGrande
-                    icono={TrendingUp}
-                    titulo="Promedio"
-                    valor={formatCLPCompacto(promedioMinimo)}
-                    color="var(--warning)"
-                />
-                <KpiGrande
-                    icono={BarChart2}
-                    titulo="Valor Máximo"
-                    valor={formatCLPCompacto(maxMinimo)}
-                    color="var(--danger)"
-                />
+                <KpiGrande icono={Building2} titulo="Propiedades Únicas" valor={datos.length.toLocaleString("es-CL")} color="var(--accent)" />
+                <KpiGrande icono={Wallet} titulo="Volumen Real" valor={formatCLPCompacto(totalMinimo)} color="var(--success)" />
+                <KpiGrande icono={TrendingUp} titulo="Promedio" valor={formatCLPCompacto(promedioMinimo)} color="var(--warning)" />
+                <KpiGrande icono={BarChart2} titulo="Valor Máximo" valor={formatCLPCompacto(maxMinimo)} color="var(--danger)" />
             </div>
 
             {/* Filtros */}
             <div
                 className="flex flex-wrap items-center gap-2.5 rounded-xl p-3.5 sm:gap-3 sm:p-4"
-                style={{
-                    background: "var(--surface)",
-                    border: "1px solid var(--border)",
-                }}
+                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
                 <div className="relative min-w-0 flex-1 basis-full sm:basis-56 sm:min-w-[220px]">
-                    <Search size={14} style={{
-                        position: "absolute", left: "10px", top: "50%",
-                        transform: "translateY(-50%)", color: "var(--accent)",
-                    }} />
+                    <Search size={14} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--accent)" }} />
                     <input
                         type="text"
                         placeholder="Deudor o Dirección..."
@@ -265,11 +249,8 @@ export default function RematesVisualizer({ datos = [] }) {
                     />
                 </div>
 
-                <div className="relative min-w-0 flex-1 basis-full sm:basis-44 sm:min-w-[160px] sm:max-w-xs">
-                    <Filter size={13} style={{
-                        position: "absolute", left: "10px", top: "50%",
-                        transform: "translateY(-50%)", color: "var(--warning)",
-                    }} />
+                <div className="relative min-w-[180px]">
+                    <Filter size={13} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--warning)" }} />
                     <select
                         value={comunaFiltro}
                         onChange={(e) => { setComunaFiltro(e.target.value); setPagina(1); }}
@@ -287,9 +268,7 @@ export default function RematesVisualizer({ datos = [] }) {
                         }}
                     >
                         {comunas.map((c) => (
-                            <option key={c} value={c} style={{ background: "var(--surface)" }}>
-                                {c}
-                            </option>
+                            <option key={c} value={c} style={{ background: "var(--surface)" }}>{c}</option>
                         ))}
                     </select>
                 </div>
@@ -312,38 +291,26 @@ export default function RematesVisualizer({ datos = [] }) {
                         flexShrink: 0,
                     }}
                 >
-                    <RefreshCw
-                        size={13}
-                        style={{ animation: recargando ? "spin 1s linear infinite" : "none" }}
-                    />
+                    <RefreshCw size={13} style={{ animation: recargando ? "spin 1s linear infinite" : "none" }} />
                     {recargando ? "Recargando..." : "Recargar"}
                 </button>
             </div>
 
             {/* Tabla + Gráfico */}
-            <div className="tgr-main-grid">
-                <div className="min-w-0">
-                    <TablaSwipeHint />
+            <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0, 1fr) 340px" }}>
+                <TableLoadingOverlay active={recargando} label="Actualizando remates…">
                     <div
-                        className="overflow-hidden rounded-xl"
-                        style={{
-                            background: "var(--surface)",
-                            border: "1px solid var(--border)",
-                        }}
+                        className="tgr-tabla-wrap"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden", minWidth: 0 }}
                     >
-                    <div className="overflow-x-auto">
-                        <table style={{
-                            width: "100%",
-                            minWidth: "560px",
-                            borderCollapse: "collapse",
-                            fontSize: "0.85rem",
-                        }}>
+                        <table className="tgr-tabla" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: "0.85rem" }}>
                             <thead>
                                 <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
                                     {COLUMNAS.map((col) => (
                                         <th
                                             key={col.key}
                                             style={{
+                                                width: col.width,
                                                 textAlign: "left",
                                                 padding: "0.75rem 1rem",
                                                 color: "var(--text-muted)",
@@ -353,12 +320,6 @@ export default function RematesVisualizer({ datos = [] }) {
                                                 letterSpacing: "0.06em",
                                                 textTransform: "uppercase",
                                                 whiteSpace: "nowrap",
-                                                ...(col.sticky ? {
-                                                    position: "sticky",
-                                                    right: 0,
-                                                    background: "var(--surface-2)",
-                                                    zIndex: 1,
-                                                } : null),
                                             }}
                                         >
                                             {col.label}
@@ -369,41 +330,24 @@ export default function RematesVisualizer({ datos = [] }) {
                             <tbody>
                                 {datosPagina.length === 0 ? (
                                     <tr>
-                                        <td
-                                            colSpan={COLUMNAS.length}
-                                            style={{
-                                                padding: "3rem",
-                                                textAlign: "center",
-                                                color: "var(--text-muted)",
-                                                fontFamily: "monospace",
-                                            }}
-                                        >
+                                        <td colSpan={COLUMNAS.length} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "monospace" }}>
                                             // Sin resultados
                                         </td>
                                     </tr>
                                 ) : (
                                     datosPagina.map((fila, i) => (
-                                        <tr
-                                            key={i}
-                                            style={{ borderBottom: "1px solid var(--border)" }}
-                                        >
+                                        <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
                                             {COLUMNAS.map((col) => (
                                                 <td
                                                     key={col.key}
                                                     style={{
                                                         padding: "0.75rem 1rem",
-                                                        maxWidth: col.maxWidth,
-                                                        ...(col.sticky ? {
-                                                            position: "sticky",
-                                                            right: 0,
-                                                            background: "var(--surface)",
-                                                            zIndex: 1,
-                                                        } : null),
+                                                        overflow: "hidden",
+                                                        verticalAlign: "middle",
+                                                        whiteSpace: "nowrap",
                                                     }}
                                                 >
-                                                    {col.render
-                                                        ? col.render(fila[col.key], fila)
-                                                        : fila[col.key] ?? "—"}
+                                                    {col.render ? col.render(fila[col.key], fila) : fila[col.key] ?? "—"}
                                                 </td>
                                             ))}
                                         </tr>
@@ -411,77 +355,29 @@ export default function RematesVisualizer({ datos = [] }) {
                                 )}
                             </tbody>
                         </table>
-                    </div>
 
-                    <div
-                        className="flex flex-wrap items-center justify-between gap-2 px-3 py-3 sm:px-4"
-                        style={{
-                            borderTop: "1px solid var(--border)",
+                        <div style={{
+                            padding: "0.75rem 1rem", borderTop: "1px solid var(--border)",
+                            display: "flex", alignItems: "center", justifyContent: "space-between",
                             background: "var(--surface-2)",
-                        }}
-                    >
-                        <p style={{
-                            color: "var(--text-muted)",
-                            fontSize: "0.75rem",
-                            fontFamily: "monospace",
                         }}>
-                            Página {pagina} de {totalPaginas || 1}
-                        </p>
-                        <div style={{ display: "flex", gap: "0.5rem" }}>
-                            <button
-                                onClick={() => setPagina((p) => Math.max(1, p - 1))}
-                                disabled={pagina === 1}
-                                style={{
-                                    background: "var(--surface)",
-                                    border: "1px solid var(--border)",
-                                    color: pagina === 1 ? "var(--text-muted)" : "var(--text-secondary)",
-                                    padding: "4px 12px",
-                                    borderRadius: "6px",
-                                    fontSize: "0.8rem",
-                                    cursor: pagina === 1 ? "not-allowed" : "pointer",
-                                }}
-                            >‹</button>
-                            <button
-                                onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
-                                disabled={pagina === totalPaginas || totalPaginas === 0}
-                                style={{
-                                    background: "var(--surface)",
-                                    border: "1px solid var(--border)",
-                                    color: (pagina === totalPaginas || totalPaginas === 0)
-                                        ? "var(--text-muted)"
-                                        : "var(--text-secondary)",
-                                    padding: "4px 12px",
-                                    borderRadius: "6px",
-                                    fontSize: "0.8rem",
-                                    cursor: (pagina === totalPaginas || totalPaginas === 0)
-                                        ? "not-allowed"
-                                        : "pointer",
-                                }}
-                            >›</button>
+                            <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "monospace" }}>
+                                Página {pagina} de {totalPaginas || 1}
+                            </p>
+                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                                <button onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={pagina === 1} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: pagina === 1 ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: pagina === 1 ? "not-allowed" : "pointer" }}>‹</button>
+                                <button onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas || totalPaginas === 0} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: (pagina === totalPaginas || totalPaginas === 0) ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: (pagina === totalPaginas || totalPaginas === 0) ? "not-allowed" : "pointer" }}>›</button>
+                            </div>
                         </div>
                     </div>
-                    </div>
-                </div>
+                </TableLoadingOverlay>
 
                 <GraficoConcentracion datos={datosFiltrados} />
             </div>
 
-            <p style={{
-                color: "var(--text-muted)",
-                fontSize: "0.7rem",
-                fontFamily: "monospace",
-                textAlign: "right",
-            }}>
-        // fuente: TGR Chile — revalidación automática cada 60 min
+            <p style={{ color: "var(--text-muted)", fontSize: "0.7rem", fontFamily: "monospace", textAlign: "right" }}>
+                // fuente: TGR Chile — revalidación automática cada 60 min
             </p>
-
-            {/* Modal ficha técnica */}
-            {fichaAbierta && (
-                <FichaTecnicaModal
-                    remate={fichaAbierta}
-                    onClose={() => setFichaAbierta(null)}
-                />
-            )}
         </div>
     );
 }

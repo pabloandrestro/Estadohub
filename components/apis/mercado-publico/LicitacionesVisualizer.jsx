@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import MpSubnav from "./MpSubnav";
 import MercadoPublicoTable from "./MercadoPublicoTable";
 import SkeletonTabla from "@/components/shared/SkeletonTabla";
+import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
 import { useMercadoPublico } from "./useMercadoPublico";
 import CampoBusquedaMp from "./CampoBusquedaMp";
 import AvisoDesdeDb from "./AvisoDesdeDb";
@@ -276,41 +277,46 @@ export default function LicitacionesVisualizer() {
                 </div>
             </div>
 
-            {mostrandoCarga ? (
-                <SkeletonTabla filas={8} columnas={5} />
-            ) : !loading && totalFiltrados === 0 ? (
-                <div
-                    style={{
-                        padding: "3rem 1rem",
-                        textAlign: "center",
-                        color: "var(--text-muted)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "0.75rem",
-                        background: "var(--surface)",
-                    }}
-                >
-                    <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-secondary)", margin: 0, marginBottom: "0.45rem" }}>
-                        Sin licitaciones
-                    </p>
-                    <p style={{ margin: 0, fontSize: "0.84rem" }}>
-                        {hayFiltros
-                            ? "No hay registros que coincidan con los filtros aplicados."
-                            : "No hay licitaciones en Supabase todavía."}
-                    </p>
-                </div>
-            ) : (
-                <MercadoPublicoTable
-                    columns={columns}
-                    rows={dataActualizada}
-                    onVerDetalle={setDetalleAbierto}
-                    emptyMessage="Sin licitaciones disponibles."
-                    labelPlural="licitaciones"
-                    paginaTamano={PAGE_SIZE}
-                    pagina={pagina}
-                    totalFilas={totalFiltrados}
-                    onPaginaChange={setPagina}
-                />
-            )}
+            <TableLoadingOverlay
+                active={loading || refreshing}
+                label={refreshing ? "Actualizando tabla…" : "Cargando licitaciones…"}
+            >
+                {mostrandoCarga ? (
+                    <SkeletonTabla filas={8} columnas={5} />
+                ) : !loading && totalFiltrados === 0 ? (
+                    <div
+                        style={{
+                            padding: "3rem 1rem",
+                            textAlign: "center",
+                            color: "var(--text-muted)",
+                            border: "1px solid var(--border)",
+                            borderRadius: "0.75rem",
+                            background: "var(--surface)",
+                        }}
+                    >
+                        <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-secondary)", margin: 0, marginBottom: "0.45rem" }}>
+                            Sin licitaciones
+                        </p>
+                        <p style={{ margin: 0, fontSize: "0.84rem" }}>
+                            {hayFiltros
+                                ? "No hay registros que coincidan con los filtros aplicados."
+                                : "No hay licitaciones en Supabase todavía."}
+                        </p>
+                    </div>
+                ) : (
+                    <MercadoPublicoTable
+                        columns={columns}
+                        rows={dataActualizada}
+                        onVerDetalle={setDetalleAbierto}
+                        emptyMessage="Sin licitaciones disponibles."
+                        labelPlural="licitaciones"
+                        paginaTamano={PAGE_SIZE}
+                        pagina={pagina}
+                        totalFilas={totalFiltrados}
+                        onPaginaChange={setPagina}
+                    />
+                )}
+            </TableLoadingOverlay>
 
             {detalleAbierto && (
                 <MercadoPublicoDetalleModal
