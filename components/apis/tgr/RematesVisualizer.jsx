@@ -13,55 +13,34 @@ import {
 } from "lucide-react";
 import BotonesExportar from "@/components/shared/BotonesExportar";
 import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
+import TablaSwipeHint from "@/components/shared/TablaSwipeHint";
 import GraficoConcentracion from "@/components/apis/tgr/GraficoConcentracion";
 import { formatCLP, formatCLPCompacto } from "@/utils/formatCurrency";
 
 const POR_PAGINA = 5;
 
+const stickyAcciones = {
+    position: "sticky",
+    right: 0,
+    zIndex: 1,
+    boxShadow: "-8px 0 12px -12px rgba(0,0,0,0.45)",
+};
+
 function KpiGrande({ icono: Icono, titulo, valor, color }) {
     return (
-        <div
-            style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: "12px",
-                padding: "1.1rem 1.25rem",
-                display: "flex",
-                alignItems: "center",
-                gap: "0.875rem",
-            }}
-        >
+        <div className="kpi-tgr">
             <div
+                className="kpi-tgr-icon"
                 style={{
                     background: `color-mix(in srgb, ${color} 12%, transparent)`,
                     border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
-                    borderRadius: "10px",
-                    padding: "0.6rem",
-                    flexShrink: 0,
                 }}
             >
                 <Icono size={18} style={{ color }} />
             </div>
-            <div>
-                <p
-                    style={{
-                        color: "var(--text-muted)",
-                        fontSize: "0.65rem",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                        marginBottom: "2px",
-                    }}
-                >
-                    {titulo}
-                </p>
-                <p
-                    style={{
-                        color,
-                        fontSize: "1.25rem",
-                        fontWeight: 800,
-                        fontFamily: "monospace",
-                    }}
-                >
+            <div className="min-w-0">
+                <p className="kpi-tgr-label">{titulo}</p>
+                <p className="kpi-tgr-value" style={{ color }}>
                     {valor}
                 </p>
             </div>
@@ -137,12 +116,9 @@ export default function RematesVisualizer({ datos = [] }) {
         {
             key: "nombreDuegno",
             label: "Deudor",
-            width: "32%",
+            minWidth: "160px",
             render: (v) => (
-                <span
-                    title={v || undefined}
-                    className="tgr-celda-truncada"
-                >
+                <span title={v || undefined} className="tgr-celda-truncada">
                     {v || "—"}
                 </span>
             ),
@@ -150,12 +126,9 @@ export default function RematesVisualizer({ datos = [] }) {
         {
             key: "direccionRol",
             label: "Ubicación",
-            width: "38%",
+            minWidth: "200px",
             render: (v) => (
-                <span
-                    title={v || undefined}
-                    className="tgr-celda-truncada"
-                >
+                <span title={v || undefined} className="tgr-celda-truncada">
                     {v ?? "—"}
                 </span>
             ),
@@ -163,7 +136,7 @@ export default function RematesVisualizer({ datos = [] }) {
         {
             key: "montoMinimo",
             label: "Tasación",
-            width: "18%",
+            minWidth: "120px",
             render: (v, fila) => {
                 const monto = v || fila.montoAvaluo;
                 return (
@@ -181,35 +154,6 @@ export default function RematesVisualizer({ datos = [] }) {
                 );
             },
         },
-        {
-            key: "_accion",
-            label: "Acciones",
-            width: "12%",
-            render: (_, fila) => (
-                <button
-                    onClick={() => {
-                        const rolFormato = fila._raw?.rolFormato;
-                        if (rolFormato) router.push(`/dashboard/tgr/${encodeURIComponent(rolFormato)}`);
-                    }}
-                    style={{
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--accent)",
-                        color: "var(--accent)",
-                        padding: "4px 14px",
-                        borderRadius: "6px",
-                        fontSize: "0.75rem",
-                        fontFamily: "monospace",
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    Ver →
-                </button>
-            ),
-        },
     ];
 
     return (
@@ -225,10 +169,10 @@ export default function RematesVisualizer({ datos = [] }) {
 
             {/* Filtros */}
             <div
-                className="flex flex-wrap items-center gap-2.5 rounded-xl p-3.5 sm:gap-3 sm:p-4"
+                className="flex min-w-0 flex-wrap items-center gap-2.5 rounded-xl p-3.5 sm:gap-3 sm:p-4"
                 style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
             >
-                <div className="relative min-w-0 flex-1 basis-full sm:basis-56 sm:min-w-[220px]">
+                <div className="relative min-w-0 flex-[2_1_12rem]">
                     <Search size={14} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--accent)" }} />
                     <input
                         type="text"
@@ -249,7 +193,7 @@ export default function RematesVisualizer({ datos = [] }) {
                     />
                 </div>
 
-                <div className="relative min-w-[180px]">
+                <div className="relative min-w-0 flex-1 basis-[9rem]">
                     <Filter size={13} style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "var(--warning)" }} />
                     <select
                         value={comunaFiltro}
@@ -273,100 +217,170 @@ export default function RematesVisualizer({ datos = [] }) {
                     </select>
                 </div>
 
-                <BotonesExportar datos={datosFiltrados} nombre="remates_tgr" />
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <BotonesExportar datos={datosFiltrados} nombre="remates_tgr" />
 
-                <button
-                    onClick={forzarRecarga}
-                    disabled={recargando}
-                    style={{
-                        display: "flex", alignItems: "center", gap: "6px",
-                        background: "var(--surface-2)",
-                        border: "1px solid var(--border)",
-                        color: recargando ? "var(--text-muted)" : "var(--text-secondary)",
-                        padding: "0.5rem 1rem",
-                        borderRadius: "8px",
-                        fontSize: "0.8rem",
-                        fontFamily: "monospace",
-                        cursor: recargando ? "not-allowed" : "pointer",
-                        flexShrink: 0,
-                    }}
-                >
-                    <RefreshCw size={13} style={{ animation: recargando ? "spin 1s linear infinite" : "none" }} />
-                    {recargando ? "Recargando..." : "Recargar"}
-                </button>
+                    <button
+                        onClick={forzarRecarga}
+                        disabled={recargando}
+                        style={{
+                            display: "flex", alignItems: "center", gap: "6px",
+                            background: "var(--surface-2)",
+                            border: "1px solid var(--border)",
+                            color: recargando ? "var(--text-muted)" : "var(--text-secondary)",
+                            padding: "0.5rem 1rem",
+                            borderRadius: "8px",
+                            fontSize: "0.8rem",
+                            fontFamily: "monospace",
+                            cursor: recargando ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        <RefreshCw size={13} style={{ animation: recargando ? "spin 1s linear infinite" : "none" }} />
+                        {recargando ? "Recargando..." : "Recargar"}
+                    </button>
+                </div>
             </div>
 
             {/* Tabla + Gráfico */}
-            <div className="grid gap-4" style={{ gridTemplateColumns: "minmax(0, 1fr) 340px" }}>
+            <div className="tgr-main-grid">
                 <TableLoadingOverlay active={recargando} label="Actualizando remates…">
-                    <div
-                        className="tgr-tabla-wrap"
-                        style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", overflow: "hidden", minWidth: 0 }}
-                    >
-                        <table className="tgr-tabla" style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse", fontSize: "0.85rem" }}>
-                            <thead>
-                                <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
-                                    {COLUMNAS.map((col) => (
-                                        <th
-                                            key={col.key}
-                                            style={{
-                                                width: col.width,
-                                                textAlign: "left",
-                                                padding: "0.75rem 1rem",
-                                                color: "var(--text-muted)",
-                                                fontSize: "0.7rem",
-                                                fontFamily: "monospace",
-                                                fontWeight: 700,
-                                                letterSpacing: "0.06em",
-                                                textTransform: "uppercase",
-                                                whiteSpace: "nowrap",
-                                            }}
-                                        >
-                                            {col.label}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {datosPagina.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={COLUMNAS.length} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "monospace" }}>
-                                            // Sin resultados
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    datosPagina.map((fila, i) => (
-                                        <tr key={i} style={{ borderBottom: "1px solid var(--border)" }}>
+                    <div className="min-w-0">
+                        <TablaSwipeHint />
+                        <div
+                            className="overflow-hidden rounded-xl"
+                            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                        >
+                            <div className="overflow-x-auto">
+                                <table
+                                    className="tgr-tabla"
+                                    style={{
+                                        width: "100%",
+                                        minWidth: "640px",
+                                        borderCollapse: "collapse",
+                                        fontSize: "0.85rem",
+                                    }}
+                                >
+                                    <thead>
+                                        <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
                                             {COLUMNAS.map((col) => (
-                                                <td
+                                                <th
                                                     key={col.key}
                                                     style={{
+                                                        minWidth: col.minWidth,
+                                                        textAlign: "left",
                                                         padding: "0.75rem 1rem",
-                                                        overflow: "hidden",
-                                                        verticalAlign: "middle",
+                                                        color: "var(--text-muted)",
+                                                        fontSize: "0.7rem",
+                                                        fontFamily: "monospace",
+                                                        fontWeight: 700,
+                                                        letterSpacing: "0.06em",
+                                                        textTransform: "uppercase",
                                                         whiteSpace: "nowrap",
                                                     }}
                                                 >
-                                                    {col.render ? col.render(fila[col.key], fila) : fila[col.key] ?? "—"}
-                                                </td>
+                                                    {col.label}
+                                                </th>
                                             ))}
+                                            <th
+                                                style={{
+                                                    minWidth: "100px",
+                                                    textAlign: "right",
+                                                    padding: "0.75rem 1rem",
+                                                    color: "var(--text-muted)",
+                                                    fontSize: "0.7rem",
+                                                    fontFamily: "monospace",
+                                                    fontWeight: 700,
+                                                    letterSpacing: "0.06em",
+                                                    textTransform: "uppercase",
+                                                    whiteSpace: "nowrap",
+                                                    background: "var(--surface-2)",
+                                                    ...stickyAcciones,
+                                                }}
+                                            >
+                                                Acciones
+                                            </th>
                                         </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                                    </thead>
+                                    <tbody>
+                                        {datosPagina.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={COLUMNAS.length + 1} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                                                    // Sin resultados
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            datosPagina.map((fila, i) => {
+                                                const rowBg =
+                                                    i % 2 === 0
+                                                        ? "var(--surface)"
+                                                        : "color-mix(in srgb, var(--surface-2) 40%, var(--surface))";
+                                                return (
+                                                    <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: rowBg }}>
+                                                        {COLUMNAS.map((col) => (
+                                                            <td
+                                                                key={col.key}
+                                                                style={{
+                                                                    padding: "0.75rem 1rem",
+                                                                    overflow: "hidden",
+                                                                    verticalAlign: "middle",
+                                                                    whiteSpace: "nowrap",
+                                                                    maxWidth: col.minWidth,
+                                                                }}
+                                                            >
+                                                                {col.render ? col.render(fila[col.key], fila) : fila[col.key] ?? "—"}
+                                                            </td>
+                                                        ))}
+                                                        <td
+                                                            style={{
+                                                                padding: "0.75rem 1rem",
+                                                                textAlign: "right",
+                                                                verticalAlign: "middle",
+                                                                background: rowBg,
+                                                                ...stickyAcciones,
+                                                            }}
+                                                        >
+                                                            <button
+                                                                onClick={() => {
+                                                                    const rolFormato = fila._raw?.rolFormato;
+                                                                    if (rolFormato) router.push(`/dashboard/tgr/${encodeURIComponent(rolFormato)}`);
+                                                                }}
+                                                                style={{
+                                                                    background: "var(--surface-2)",
+                                                                    border: "1px solid var(--accent)",
+                                                                    color: "var(--accent)",
+                                                                    padding: "4px 14px",
+                                                                    borderRadius: "6px",
+                                                                    fontSize: "0.75rem",
+                                                                    fontFamily: "monospace",
+                                                                    cursor: "pointer",
+                                                                    display: "inline-flex",
+                                                                    alignItems: "center",
+                                                                    gap: "4px",
+                                                                    whiteSpace: "nowrap",
+                                                                }}
+                                                            >
+                                                                Ver →
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        <div style={{
-                            padding: "0.75rem 1rem", borderTop: "1px solid var(--border)",
-                            display: "flex", alignItems: "center", justifyContent: "space-between",
-                            background: "var(--surface-2)",
-                        }}>
-                            <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "monospace" }}>
-                                Página {pagina} de {totalPaginas || 1}
-                            </p>
-                            <div style={{ display: "flex", gap: "0.5rem" }}>
-                                <button onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={pagina === 1} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: pagina === 1 ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: pagina === 1 ? "not-allowed" : "pointer" }}>‹</button>
-                                <button onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas || totalPaginas === 0} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: (pagina === totalPaginas || totalPaginas === 0) ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: (pagina === totalPaginas || totalPaginas === 0) ? "not-allowed" : "pointer" }}>›</button>
+                            <div className="flex flex-wrap items-center justify-between gap-2" style={{
+                                padding: "0.75rem 1rem", borderTop: "1px solid var(--border)",
+                                background: "var(--surface-2)",
+                            }}>
+                                <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "monospace" }}>
+                                    Página {pagina} de {totalPaginas || 1}
+                                </p>
+                                <div style={{ display: "flex", gap: "0.5rem" }}>
+                                    <button onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={pagina === 1} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: pagina === 1 ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: pagina === 1 ? "not-allowed" : "pointer" }}>‹</button>
+                                    <button onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas || totalPaginas === 0} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: (pagina === totalPaginas || totalPaginas === 0) ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: (pagina === totalPaginas || totalPaginas === 0) ? "not-allowed" : "pointer" }}>›</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -375,7 +389,7 @@ export default function RematesVisualizer({ datos = [] }) {
                 <GraficoConcentracion datos={datosFiltrados} />
             </div>
 
-            <p style={{ color: "var(--text-muted)", fontSize: "0.7rem", fontFamily: "monospace", textAlign: "right" }}>
+            <p className="text-left sm:text-right" style={{ color: "var(--text-muted)", fontSize: "0.7rem", fontFamily: "monospace" }}>
                 // fuente: TGR Chile — revalidación automática cada 60 min
             </p>
         </div>

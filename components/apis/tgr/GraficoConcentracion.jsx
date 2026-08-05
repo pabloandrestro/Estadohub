@@ -18,13 +18,16 @@ export default function GraficoConcentracion({ datos }) {
     const max = top10[0]?.total || 1;
 
     return (
-        <div style={{
-            background: "var(--surface)",
-            border: "1px solid var(--border)",
-            borderRadius: "12px",
-            padding: "1.25rem",
-            height: "100%",
-        }}>
+        <div
+            className="min-w-0"
+            style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                padding: "1.25rem",
+                height: "100%",
+            }}
+        >
             <h3 style={{
                 color: "var(--text-secondary)",
                 fontSize: "0.8rem",
@@ -37,21 +40,16 @@ export default function GraficoConcentracion({ datos }) {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
                 {top10.map(({ comuna, total }, i) => (
-                    <div key={comuna} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <div key={comuna} className="flex min-w-0 items-center gap-2">
 
                         {/* Label comuna */}
-                        <p style={{
-                            color: "var(--text-muted)",
-                            fontSize: "0.68rem",
-                            fontFamily: "monospace",
-                            width: "72px",
-                            maxWidth: "30%",
-                            textAlign: "right",
-                            flexShrink: 0,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
+                        <p
+                            className="w-16 shrink-0 truncate text-right sm:w-[4.5rem]"
+                            style={{
+                                color: "var(--text-muted)",
+                                fontSize: "0.68rem",
+                                fontFamily: "monospace",
+                            }}
                             title={comuna}
                         >
                             {comuna}

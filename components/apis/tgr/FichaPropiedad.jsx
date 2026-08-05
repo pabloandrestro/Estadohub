@@ -6,33 +6,23 @@ import {
 import { formatCLP } from "@/utils/formatCurrency";
 import { formatDate } from "@/utils/formatDate";
 import dynamic from "next/dynamic";
-import { obtenerCoordsFicha } from "@/lib/geoComunas";
 
-
-
-const CARD = { background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" };
 const SECTION_LABEL = { fontSize: "0.62rem", fontWeight: 500, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "8px", paddingLeft: "2px" };
 const MapaPredio = dynamic(() => import("./MapaPredio"), { ssr: false, loading: () => (<p style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>Cargando mapa...</p>), });
-
-
 
 const BG_SUCCESS = "color-mix(in srgb, var(--success) 12%, transparent)";
 const BG_WARNING = "color-mix(in srgb, var(--warning) 12%, transparent)";
 const BG_DANGER = "color-mix(in srgb, var(--danger)  12%, transparent)";
 const BG_ACCENT = "color-mix(in srgb, var(--accent)  12%, transparent)";
 
-
-
 function Campo({ label, valor, color }) {
     return (
-        <div>
+        <div className="min-w-0">
             <p style={{ color: "var(--text-muted)", fontSize: "0.65rem", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "2px" }}>{label}</p>
-            <p style={{ color: color ?? "var(--text-secondary)", fontWeight: 500, fontSize: "0.82rem", lineHeight: 1.3 }}>{valor && valor !== "" ? valor : "—"}</p>
+            <p style={{ color: color ?? "var(--text-secondary)", fontWeight: 500, fontSize: "0.82rem", lineHeight: 1.3, overflowWrap: "anywhere" }}>{valor && valor !== "" ? valor : "—"}</p>
         </div>
     );
 }
-
-
 
 function Tag({ children, tipo = "danger" }) {
     const estilos = {
@@ -49,24 +39,18 @@ function Tag({ children, tipo = "danger" }) {
     );
 }
 
-
-
 function CardHeader({ icono: Icono, titulo, color }) {
     return (
         <div style={{ display: "flex", alignItems: "center", gap: "8px", paddingBottom: "12px", marginBottom: "12px", borderBottom: "1px solid var(--border)" }}>
-            <Icono size={16} style={{ color }} />
+            <Icono size={16} style={{ color, flexShrink: 0 }} />
             <span style={{ fontSize: "0.82rem", fontWeight: 500, color }}>{titulo}</span>
         </div>
     );
 }
 
-
-
 function CardDesc({ children }) {
     return <p style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginBottom: "12px", lineHeight: 1.5 }}>{children}</p>;
 }
-
-
 
 function BarraScore({ score }) {
     const color = score >= 70 ? "var(--success)" : score >= 40 ? "var(--warning)" : "var(--danger)";
@@ -79,13 +63,33 @@ function BarraScore({ score }) {
     );
 }
 
-
+function KpiCard({ label, valor, color, sub }) {
+    return (
+        <div
+            className="min-w-0"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "14px 16px" }}
+        >
+            <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>{label}</p>
+            <p
+                style={{
+                    fontSize: "clamp(0.85rem, 2.8vw, 1rem)",
+                    fontWeight: 500,
+                    fontFamily: "monospace",
+                    color,
+                    lineHeight: 1.2,
+                    overflowWrap: "anywhere",
+                }}
+            >
+                {valor}
+            </p>
+            {sub ? <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: "3px" }}>{sub}</p> : null}
+        </div>
+    );
+}
 
 export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFormato }) {
     const router = useRouter();
     const raw = remate._raw || {};
-
-
 
     const direccion = remate.direccionRol || raw.direccionRol || "Sin dirección";
     const comuna = remate.comunaJuzgado || raw.comunaJuzgado || "—";
@@ -101,20 +105,9 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
     const montoMinimo = remate.montoMinimo;
     const fechaRemate = remate.fechaRemate;
 
-
-
     const agua = analisis?.agua;
     const oportunidad = analisis?.oportunidad;
     const antiguedad = analisis?.antiguedad;
-
-
-    const coordsMapa = obtenerCoordsFicha({
-        analisis,
-        comuna: remate?.comuna || remate?.comunaJuzgado || raw?.comunaJuzgado || raw?.comuna || "",
-        direccion,
-    });
-
-
 
     const nivelColor = { ALTO: "var(--success)", MEDIO: "var(--warning)", BAJO: "var(--danger)" };
     const nivelBg = {
@@ -123,84 +116,85 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
         BAJO: { background: BG_DANGER, color: "var(--danger)", border: `1px solid var(--danger)` },
     };
 
-
-    console.log("analisis coordenadas:", analisis?.coordenadas);
-    console.log("coordsMapa:", coordsMapa);
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-
-
+        <div className="flex min-w-0 flex-col gap-4">
 
             {/* Top bar */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <button onClick={() => router.back()} style={{ display: "flex", alignItems: "center", gap: "5px", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 500, color: "var(--text-secondary)", background: "var(--surface)", cursor: "pointer" }}>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <button
+                    onClick={() => router.back()}
+                    style={{ display: "flex", alignItems: "center", gap: "5px", border: "1px solid var(--border)", borderRadius: "8px", padding: "6px 12px", fontSize: "0.75rem", fontWeight: 500, color: "var(--text-secondary)", background: "var(--surface)", cursor: "pointer" }}
+                >
                     <ArrowLeft size={13} /> Volver
                 </button>
-                <span style={{ fontSize: "0.68rem", padding: "3px 10px", borderRadius: "999px", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "monospace" }}>
+                <span
+                    className="max-w-full truncate"
+                    style={{ fontSize: "0.68rem", padding: "3px 10px", borderRadius: "999px", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "monospace" }}
+                    title={expediente || rolFormato}
+                >
                     {expediente || rolFormato}
                 </span>
-                <span style={{ fontSize: "0.68rem", padding: "3px 10px", borderRadius: "999px", border: `1px solid var(--success)`, color: "var(--success)", background: BG_SUCCESS, display: "flex", alignItems: "center", gap: "5px" }}>
+                <span style={{ fontSize: "0.68rem", padding: "3px 10px", borderRadius: "999px", border: `1px solid var(--success)`, color: "var(--success)", background: BG_SUCCESS, display: "flex", alignItems: "center", gap: "5px", flexShrink: 0 }}>
                     <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--success)", display: "inline-block" }} />
                     Remate activo
                 </span>
             </div>
 
-
-
             {/* Hero */}
-            <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "16px", padding: "20px 24px", position: "relative", overflow: "hidden" }}>
+            <div
+                className="relative overflow-hidden rounded-2xl px-4 py-4 sm:px-6 sm:py-5"
+                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+            >
                 <div style={{ position: "absolute", top: 0, left: 0, width: "4px", height: "100%", background: "var(--success)", borderRadius: "16px 0 0 16px" }} />
-                <h1 style={{ fontSize: "1.25rem", fontWeight: 500, color: "var(--success)", margin: "0 0 4px", textTransform: "uppercase", lineHeight: 1.2 }}>{direccion}</h1>
-                <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>{comuna} · Inmueble territorial</p>
+                <h1
+                    className="pl-2 text-base font-medium uppercase leading-snug sm:text-xl"
+                    style={{ color: "var(--success)", margin: "0 0 4px", overflowWrap: "anywhere" }}
+                >
+                    {direccion}
+                </h1>
+                <p className="pl-2" style={{ fontSize: "0.75rem", color: "var(--text-muted)", margin: 0 }}>{comuna} · Inmueble territorial</p>
             </div>
-
-
 
             {/* KPIs */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
-                    <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>Valor de referencia</p>
-                    <p style={{ fontSize: "1rem", fontWeight: 500, fontFamily: "monospace", color: "var(--text-secondary)", lineHeight: 1 }}>{montoAvaluo ? formatCLP(montoAvaluo) : "—"}</p>
-                </div>
-                <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
-                    <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>▲ Tasación mínima</p>
-                    <p style={{ fontSize: "1rem", fontWeight: 500, fontFamily: "monospace", color: "var(--success)", lineHeight: 1 }}>{montoMinimo ? formatCLP(montoMinimo) : "—"}</p>
-                </div>
-                <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
-                    <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "6px" }}>Fecha del remate</p>
-                    <p style={{ fontSize: "1rem", fontWeight: 500, fontFamily: "monospace", color: "var(--accent)", lineHeight: 1 }}>{fechaRemate ? formatDate(fechaRemate) : "—"}</p>
-                    <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: "3px" }}>13:00 hrs.</p>
-                </div>
+            <div className="grid grid-cols-1 gap-2.5 min-[480px]:grid-cols-3">
+                <KpiCard
+                    label="Valor de referencia"
+                    valor={montoAvaluo ? formatCLP(montoAvaluo) : "—"}
+                    color="var(--text-secondary)"
+                />
+                <KpiCard
+                    label="▲ Tasación mínima"
+                    valor={montoMinimo ? formatCLP(montoMinimo) : "—"}
+                    color="var(--success)"
+                />
+                <KpiCard
+                    label="Fecha del remate"
+                    valor={fechaRemate ? formatDate(fechaRemate) : "—"}
+                    color="var(--accent)"
+                    sub="13:00 hrs."
+                />
             </div>
 
-
-
-            {/* Info del predio-Layout 2/3 + 1/3 */}
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "16px", alignItems: "start" }}>
-
-
+            {/* Layout: predio + análisis */}
+            <div className="tgr-ficha-layout">
 
                 {/* Columna izquierda — info del predio */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div className="flex min-w-0 flex-col gap-2.5">
                     <p style={SECTION_LABEL}>Información del predio</p>
-
-
 
                     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
                         <CardHeader icono={Building2} titulo="Identificación del activo" color="var(--accent)" />
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
-                            <div style={{ gridColumn: "1 / -1" }}><Campo label="Deudor / Propietario" valor={dueno} /></div>
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">
+                            <div className="sm:col-span-2"><Campo label="Deudor / Propietario" valor={dueno} /></div>
                             <Campo label="Comuna" valor={comuna} />
                             <Campo label="ROL · SII" valor={rolSII} color="var(--accent)" />
                         </div>
                     </div>
 
-
-
                     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
                         <CardHeader icono={Scale} titulo="Antecedentes judiciales" color="var(--warning)" />
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 16px" }}>
-                            <div style={{ gridColumn: "1 / -1" }}><Campo label="Juzgado" valor={tribunal} /></div>
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">
+                            <div className="sm:col-span-2"><Campo label="Juzgado" valor={tribunal} /></div>
                             <Campo label="ROL Judicial" valor={String(rolCausa)} />
                             <div>
                                 <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "4px" }}>Tipo de deuda</p>
@@ -209,18 +203,20 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                         </div>
                     </div>
 
-
-
                     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
                         <CardHeader icono={Clock} titulo="Períodos del impuesto adeudado" color="var(--text-secondary)" />
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                        <div className="grid grid-cols-1 gap-2.5 min-[480px]:grid-cols-3">
                             <Campo label="Desde" valor={periodoDesde} />
                             <Campo label="Hasta" valor={periodoHasta} />
                             <Campo label="Extensión" valor="—" />
                         </div>
                     </div>
+
                     {/* Mapa */}
-                    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", minHeight: "480px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div
+                        className="flex min-w-0 flex-col gap-2"
+                        style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}
+                    >
                         <CardHeader icono={Map} titulo="Ubicación del predio" color="var(--accent)" />
                         <MapaPredio
                             rol={rolSII}
@@ -233,13 +229,9 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                     </div>
                 </div>
 
-
-
                 {/* Columna derecha — análisis */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div className="flex min-w-0 flex-col gap-2.5">
                     <p style={SECTION_LABEL}>Análisis</p>
-
-
 
                     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
                         <CardHeader icono={TrendingUp} titulo="Oportunidad de compra" color="var(--warning)" />
@@ -255,8 +247,6 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                             </div>
                         </div>
                     </div>
-
-
 
                     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
                         <CardHeader icono={Calendar} titulo="Antigüedad de deuda" color="var(--accent)" />
@@ -275,12 +265,10 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                         )}
                     </div>
 
-
-
                     <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <Droplets size={16} style={{ color: "var(--accent)" }} />
+                                <Droplets size={16} style={{ color: "var(--accent)", flexShrink: 0 }} />
                                 <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "var(--accent)" }}>Agua subterránea</span>
                             </div>
                             {agua && (
@@ -290,26 +278,25 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                             )}
                         </div>
 
-
-
                         <CardDesc>Estima la probabilidad de encontrar agua subterránea apta para perforar un pozo, usando datos de la DGA, topografía y uso de suelo.</CardDesc>
-
-
 
                         {errorAnalisis ? (
                             <p style={{ color: "var(--danger)", fontSize: "0.8rem" }}>⚠ {errorAnalisis}</p>
                         ) : agua ? (
                             <>
-                                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", padding: "8px 10px", borderRadius: "8px", marginBottom: "12px", background: agua.puedePerforar ? BG_SUCCESS : BG_DANGER, color: agua.puedePerforar ? "var(--success)" : "var(--danger)" }}>
-                                    {agua.puedePerforar ? <CheckCircle size={13} /> : <XCircle size={13} />}
+                                <div
+                                    className="mb-3 flex items-start gap-1.5 rounded-lg px-2.5 py-2 text-xs sm:items-center"
+                                    style={{ background: agua.puedePerforar ? BG_SUCCESS : BG_DANGER, color: agua.puedePerforar ? "var(--success)" : "var(--danger)" }}
+                                >
+                                    {agua.puedePerforar ? <CheckCircle size={13} style={{ flexShrink: 0, marginTop: 1 }} /> : <XCircle size={13} style={{ flexShrink: 0, marginTop: 1 }} />}
                                     <span>{agua.puedePerforar ? "No está en zona de prohibición DGA" : "Zona de prohibición DGA"}</span>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "8px" }}>
-                                    <span style={{ fontSize: "2.25rem", fontWeight: 500, fontFamily: "monospace", color: nivelColor[agua.nivel], lineHeight: 1 }}>{agua.score}</span>
+                                    <span style={{ fontSize: "clamp(1.6rem, 6vw, 2.25rem)", fontWeight: 500, fontFamily: "monospace", color: nivelColor[agua.nivel], lineHeight: 1 }}>{agua.score}</span>
                                     <span style={{ fontSize: "1rem", color: "var(--text-muted)", fontFamily: "monospace" }}>/ 100</span>
                                 </div>
                                 <BarraScore score={agua.score} />
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "12px" }}>
+                                <div className="mb-3 grid grid-cols-2 gap-2">
                                     <div>
                                         <p style={{ fontSize: "0.9rem", fontWeight: 500, fontFamily: "monospace", color: "var(--text-secondary)" }}>{String(agua.pozos2km)}</p>
                                         <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "2px" }}>Pozos 2km</p>
@@ -319,7 +306,7 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                                         <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "2px" }}>Caudal</p>
                                     </div>
                                     <div>
-                                        <p style={{ fontSize: "0.9rem", fontWeight: 500, fontFamily: "monospace", color: "var(--text-secondary)" }}>{agua.posicion}</p>
+                                        <p style={{ fontSize: "0.9rem", fontWeight: 500, fontFamily: "monospace", color: "var(--text-secondary)", overflowWrap: "anywhere" }}>{agua.posicion}</p>
                                         <p style={{ fontSize: "0.62rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "2px" }}>Topografía</p>
                                     </div>
                                     <div>
@@ -328,8 +315,8 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                                     </div>
                                 </div>
                                 {agua.errorDGA && (
-                                    <div style={{ background: BG_WARNING, border: `1px solid var(--warning)`, borderRadius: "8px", padding: "8px 12px", fontSize: "0.72rem", color: "var(--warning)", display: "flex", gap: "6px", alignItems: "center" }}>
-                                        <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                                    <div style={{ background: BG_WARNING, border: `1px solid var(--warning)`, borderRadius: "8px", padding: "8px 12px", fontSize: "0.72rem", color: "var(--warning)", display: "flex", gap: "6px", alignItems: "flex-start" }}>
+                                        <AlertCircle size={13} style={{ flexShrink: 0, marginTop: 1 }} />
                                         <span>{agua.errorDGA}</span>
                                     </div>
                                 )}
@@ -341,19 +328,14 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                 </div>
             </div>
 
-
-
-
             {/* Advertencia subasta */}
             <div style={{ background: BG_WARNING, border: `1px solid var(--warning)`, borderRadius: "12px", padding: "12px 16px", fontSize: "0.75rem", color: "var(--warning)", display: "flex", gap: "8px", alignItems: "flex-start" }}>
                 <AlertCircle size={15} style={{ flexShrink: 0, marginTop: "1px" }} />
                 <span><strong>Condiciones de subasta no publicadas.</strong> Garantía, modalidad y bases se detallan en el edicto judicial.</span>
             </div>
 
-
-
             {/* Footer */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <p style={{ fontSize: "0.68rem", color: "var(--text-muted)", fontFamily: "monospace" }}>⊙ Fuente: TGR · actualizado hoy</p>
                 <button
                     onClick={() => window.open("https://remates.tgr.cl/", "_blank")}
@@ -362,8 +344,6 @@ export default function FichaPropiedad({ remate, analisis, errorAnalisis, rolFor
                     <Download size={13} /> Descargar edicto
                 </button>
             </div>
-
-
 
         </div>
     );

@@ -96,8 +96,8 @@ export default function MapaPredio({
     }
 
     return (
-        <div style={{ width: "100%" }}>
-            <div style={{ height: "480px", width: "100%", borderRadius: "8px", overflow: "hidden" }}>
+        <div className="w-full min-w-0">
+            <div className="tgr-mapa-altura w-full overflow-hidden rounded-lg">
                 <MapContainer
                     center={[coords.lat, coords.lng]}
                     zoom={17}

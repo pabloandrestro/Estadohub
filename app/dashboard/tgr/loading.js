@@ -3,19 +3,17 @@ import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
 
 export default function TgrLoading() {
     return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="flex min-w-0 flex-col gap-4">
             <div
                 style={{
                     height: 28,
                     width: 180,
+                    maxWidth: "100%",
                     borderRadius: 8,
                     background: "var(--surface-2)",
                 }}
             />
-            <div
-                className="grid gap-3"
-                style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
-            >
+            <div className="kpi-grid kpi-grid--4">
                 {Array.from({ length: 4 }).map((_, i) => (
                     <div
                         key={i}
