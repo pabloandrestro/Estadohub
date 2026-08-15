@@ -13,18 +13,11 @@ import {
 } from "lucide-react";
 import BotonesExportar from "@/components/shared/BotonesExportar";
 import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
-import TablaSwipeHint from "@/components/shared/TablaSwipeHint";
+import MercadoPublicoTable from "@/components/apis/mercado-publico/MercadoPublicoTable";
 import GraficoConcentracion from "@/components/apis/tgr/GraficoConcentracion";
 import { formatCLP, formatCLPCompacto } from "@/utils/formatCurrency";
 
 const POR_PAGINA = 5;
-
-const stickyAcciones = {
-    position: "sticky",
-    right: 0,
-    zIndex: 1,
-    boxShadow: "-8px 0 12px -12px rgba(0,0,0,0.45)",
-};
 
 function KpiGrande({ icono: Icono, titulo, valor, color }) {
     return (
@@ -96,7 +89,6 @@ export default function RematesVisualizer({ datos = [] }) {
         [datos]
     );
 
-    const totalPaginas = Math.ceil(datosFiltrados.length / POR_PAGINA);
     const datosPagina = datosFiltrados.slice(
         (pagina - 1) * POR_PAGINA,
         pagina * POR_PAGINA
@@ -114,44 +106,33 @@ export default function RematesVisualizer({ datos = [] }) {
 
     const COLUMNAS = [
         {
+            key: "rol",
+            label: "Rol",
+            card: "id",
+            render: (row) => row.rol ?? "—",
+        },
+        {
             key: "nombreDuegno",
             label: "Deudor",
-            minWidth: "160px",
-            render: (v) => (
-                <span title={v || undefined} className="tgr-celda-truncada">
-                    {v || "—"}
-                </span>
+            card: "title",
+            render: (row) => (
+                <span title={row.nombreDuegno || undefined}>{row.nombreDuegno || "—"}</span>
             ),
         },
         {
             key: "direccionRol",
             label: "Ubicación",
-            minWidth: "200px",
-            render: (v) => (
-                <span title={v || undefined} className="tgr-celda-truncada">
-                    {v ?? "—"}
-                </span>
+            render: (row) => (
+                <span title={row.direccionRol || undefined}>{row.direccionRol ?? "—"}</span>
             ),
         },
         {
             key: "montoMinimo",
             label: "Tasación",
-            minWidth: "120px",
-            render: (v, fila) => {
-                const monto = v || fila.montoAvaluo;
-                return (
-                    <span
-                        style={{
-                            color: monto ? "var(--success)" : "var(--text-muted)",
-                            fontFamily: "monospace",
-                            fontWeight: 700,
-                            fontSize: "0.8rem",
-                            whiteSpace: "nowrap",
-                        }}
-                    >
-                        {monto ? formatCLP(monto) : "—"}
-                    </span>
-                );
+            card: "highlight",
+            render: (row) => {
+                const monto = row.montoMinimo || row.montoAvaluo;
+                return monto ? formatCLP(monto) : "—";
             },
         },
     ];
@@ -244,146 +225,20 @@ export default function RematesVisualizer({ datos = [] }) {
             {/* Tabla + Gráfico */}
             <div className="tgr-main-grid">
                 <TableLoadingOverlay active={recargando} label="Actualizando remates…">
-                    <div className="min-w-0">
-                        <TablaSwipeHint />
-                        <div
-                            className="overflow-hidden rounded-xl"
-                            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-                        >
-                            <div className="overflow-x-auto">
-                                <table
-                                    className="tgr-tabla"
-                                    style={{
-                                        width: "100%",
-                                        minWidth: "640px",
-                                        borderCollapse: "collapse",
-                                        fontSize: "0.85rem",
-                                    }}
-                                >
-                                    <thead>
-                                        <tr style={{ background: "var(--surface-2)", borderBottom: "1px solid var(--border)" }}>
-                                            {COLUMNAS.map((col) => (
-                                                <th
-                                                    key={col.key}
-                                                    style={{
-                                                        minWidth: col.minWidth,
-                                                        textAlign: "left",
-                                                        padding: "0.75rem 1rem",
-                                                        color: "var(--text-muted)",
-                                                        fontSize: "0.7rem",
-                                                        fontFamily: "monospace",
-                                                        fontWeight: 700,
-                                                        letterSpacing: "0.06em",
-                                                        textTransform: "uppercase",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
-                                                    {col.label}
-                                                </th>
-                                            ))}
-                                            <th
-                                                style={{
-                                                    minWidth: "100px",
-                                                    textAlign: "right",
-                                                    padding: "0.75rem 1rem",
-                                                    color: "var(--text-muted)",
-                                                    fontSize: "0.7rem",
-                                                    fontFamily: "monospace",
-                                                    fontWeight: 700,
-                                                    letterSpacing: "0.06em",
-                                                    textTransform: "uppercase",
-                                                    whiteSpace: "nowrap",
-                                                    background: "var(--surface-2)",
-                                                    ...stickyAcciones,
-                                                }}
-                                            >
-                                                Acciones
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {datosPagina.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={COLUMNAS.length + 1} style={{ padding: "3rem", textAlign: "center", color: "var(--text-muted)", fontFamily: "monospace" }}>
-                                                    // Sin resultados
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            datosPagina.map((fila, i) => {
-                                                const rowBg =
-                                                    i % 2 === 0
-                                                        ? "var(--surface)"
-                                                        : "color-mix(in srgb, var(--surface-2) 40%, var(--surface))";
-                                                return (
-                                                    <tr key={i} style={{ borderBottom: "1px solid var(--border)", background: rowBg }}>
-                                                        {COLUMNAS.map((col) => (
-                                                            <td
-                                                                key={col.key}
-                                                                style={{
-                                                                    padding: "0.75rem 1rem",
-                                                                    overflow: "hidden",
-                                                                    verticalAlign: "middle",
-                                                                    whiteSpace: "nowrap",
-                                                                    maxWidth: col.minWidth,
-                                                                }}
-                                                            >
-                                                                {col.render ? col.render(fila[col.key], fila) : fila[col.key] ?? "—"}
-                                                            </td>
-                                                        ))}
-                                                        <td
-                                                            style={{
-                                                                padding: "0.75rem 1rem",
-                                                                textAlign: "right",
-                                                                verticalAlign: "middle",
-                                                                background: rowBg,
-                                                                ...stickyAcciones,
-                                                            }}
-                                                        >
-                                                            <button
-                                                                onClick={() => {
-                                                                    const rolFormato = fila._raw?.rolFormato;
-                                                                    if (rolFormato) router.push(`/dashboard/tgr/${encodeURIComponent(rolFormato)}`);
-                                                                }}
-                                                                style={{
-                                                                    background: "var(--surface-2)",
-                                                                    border: "1px solid var(--accent)",
-                                                                    color: "var(--accent)",
-                                                                    padding: "4px 14px",
-                                                                    borderRadius: "6px",
-                                                                    fontSize: "0.75rem",
-                                                                    fontFamily: "monospace",
-                                                                    cursor: "pointer",
-                                                                    display: "inline-flex",
-                                                                    alignItems: "center",
-                                                                    gap: "4px",
-                                                                    whiteSpace: "nowrap",
-                                                                }}
-                                                            >
-                                                                Ver →
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <div className="flex flex-wrap items-center justify-between gap-2" style={{
-                                padding: "0.75rem 1rem", borderTop: "1px solid var(--border)",
-                                background: "var(--surface-2)",
-                            }}>
-                                <p style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "monospace" }}>
-                                    Página {pagina} de {totalPaginas || 1}
-                                </p>
-                                <div style={{ display: "flex", gap: "0.5rem" }}>
-                                    <button onClick={() => setPagina((p) => Math.max(1, p - 1))} disabled={pagina === 1} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: pagina === 1 ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: pagina === 1 ? "not-allowed" : "pointer" }}>‹</button>
-                                    <button onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))} disabled={pagina === totalPaginas || totalPaginas === 0} style={{ background: "var(--surface)", border: "1px solid var(--border)", color: (pagina === totalPaginas || totalPaginas === 0) ? "var(--text-muted)" : "var(--text-secondary)", padding: "4px 12px", borderRadius: "6px", fontSize: "0.8rem", cursor: (pagina === totalPaginas || totalPaginas === 0) ? "not-allowed" : "pointer" }}>›</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <MercadoPublicoTable
+                        columns={COLUMNAS}
+                        rows={datosPagina}
+                        onVerDetalle={(fila) => {
+                            const rolFormato = fila._raw?.rolFormato;
+                            if (rolFormato) router.push(`/dashboard/tgr/${encodeURIComponent(rolFormato)}`);
+                        }}
+                        emptyMessage="Sin resultados."
+                        labelPlural="remates"
+                        paginaTamano={POR_PAGINA}
+                        pagina={pagina}
+                        totalFilas={datosFiltrados.length}
+                        onPaginaChange={setPagina}
+                    />
                 </TableLoadingOverlay>
 
                 <GraficoConcentracion datos={datosFiltrados} />

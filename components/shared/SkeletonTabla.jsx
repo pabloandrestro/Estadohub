@@ -1,75 +1,56 @@
-export default function SkeletonTabla({ filas = 8, columnas = 4 }) {
+function Barra({ width, height = "10px", radius = "9999px" }) {
     return (
         <div
-            style={{
-                borderRadius: "0.75rem",
-                border: "1px solid var(--border)",
-                overflow: "hidden",
-                background: "var(--surface)",
-            }}
-        >
-            <div
-                style={{
-                    background: "var(--surface-2)",
-                    borderBottom: "1px solid var(--border)",
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${columnas}, 1fr)`,
-                    gap: "1rem",
-                    padding: "0.65rem 1rem",
-                }}
-            >
-                {Array.from({ length: columnas }).map((_, i) => (
-                    <div
-                        key={i}
-                        style={{
-                            height: "10px",
-                            borderRadius: "4px",
-                            background: "var(--surface-dynamic)",
-                            animation: "shimmer 1.4s ease-in-out infinite",
-                            backgroundSize: "200% 100%",
-                            backgroundImage:
-                                "linear-gradient(90deg, var(--surface-dynamic) 25%, var(--surface-offset) 50%, var(--surface-dynamic) 75%)",
-                            width: i === 0 ? "60%" : "80%",
-                        }}
-                    />
-                ))}
-            </div>
+            className="skeleton-shimmer"
+            style={{ width, height, borderRadius: radius }}
+        />
+    );
+}
 
-            {Array.from({ length: filas }).map((_, ri) => (
-                <div
-                    key={ri}
-                    style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(${columnas}, 1fr)`,
-                        gap: "1rem",
-                        padding: "0.7rem 1rem",
-                        borderTop: ri > 0 ? "1px solid var(--border)" : "none",
-                        background: ri % 2 === 0 ? "transparent" : "color-mix(in srgb, var(--surface-2) 40%, transparent)",
-                    }}
-                >
-                    {Array.from({ length: columnas }).map((_, ci) => (
-                        <div
-                            key={ci}
-                            style={{
-                                height: "12px",
-                                borderRadius: "4px",
-                                backgroundImage:
-                                    "linear-gradient(90deg, var(--surface-dynamic) 25%, var(--surface-offset) 50%, var(--surface-dynamic) 75%)",
-                                backgroundSize: "200% 100%",
-                                animation: `shimmer 1.4s ease-in-out ${ri * 0.05}s infinite`,
-                                width: ci === 1 ? "90%" : ci === columnas - 1 ? "50%" : "75%",
-                            }}
-                        />
-                    ))}
+export default function SkeletonTabla({ filas = 8 }) {
+    return (
+        <div className="registro-grid">
+            {Array.from({ length: filas }).map((_, i) => (
+                <div key={i} className="registro-card" style={{ opacity: 0.85 }}>
+                    <div className="registro-card-head">
+                        <div className="min-w-0" style={{ display: "flex", flexDirection: "column", gap: "0.45rem", width: "100%" }}>
+                            <Barra width="35%" height="8px" />
+                            <Barra width="70%" height="13px" radius="4px" />
+                        </div>
+                        <Barra width="3.5rem" height="18px" />
+                    </div>
+
+                    <div className="registro-card-meta">
+                        {Array.from({ length: 2 }).map((_, j) => (
+                            <div key={j} style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                                <Barra width="50%" height="7px" />
+                                <Barra width="85%" height="10px" radius="4px" />
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ paddingTop: "0.65rem", borderTop: "1px dashed var(--border)" }}>
+                        <Barra width="45%" height="14px" radius="4px" />
+                    </div>
                 </div>
             ))}
 
             <style>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-      `}</style>
+                .skeleton-shimmer {
+                    background-image: linear-gradient(
+                        90deg,
+                        var(--surface-2) 25%,
+                        color-mix(in srgb, var(--border) 60%, var(--surface-2)) 50%,
+                        var(--surface-2) 75%
+                    );
+                    background-size: 200% 100%;
+                    animation: skeleton-shimmer-move 1.4s ease-in-out infinite;
+                }
+                @keyframes skeleton-shimmer-move {
+                    0% { background-position: -200% 0; }
+                    100% { background-position: 200% 0; }
+                }
+            `}</style>
         </div>
     );
 }

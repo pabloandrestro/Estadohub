@@ -57,82 +57,36 @@ export default function OrdenesCompraVisualizer() {
         {
             key: "codigo",
             label: "Código",
-            render: (row) => (
-                <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "monospace" }}>
-                    {row.codigo ?? "—"}
-                </span>
-            ),
+            card: "id",
+            render: (row) => row.codigo ?? "—",
         },
         {
             key: "proveedor",
             label: "Proveedor",
-            render: (row) => {
-                const proveedor = row.proveedor ?? "—";
-                return (
-                    <span
-                        style={{
-                            display: "block",
-                            maxWidth: "220px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: "var(--text-secondary)",
-                            fontWeight: 600,
-                            minWidth: 0,
-                        }}
-                        title={proveedor}
-                    >
-                        {proveedor}
-                    </span>
-                );
-            },
-        },
-        {
-            key: "comprador",
-            label: "Comprador",
-            render: (row) => {
-                const comprador = row.comprador ?? "—";
-                return (
-                    <span
-                        style={{
-                            display: "block",
-                            maxWidth: "200px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: "var(--text-muted)",
-                            fontSize: "0.78rem",
-                            minWidth: 0,
-                        }}
-                        title={comprador}
-                    >
-                        {comprador}
-                    </span>
-                );
-            },
+            card: "title",
+            render: (row) => <span title={row.proveedor || undefined}>{row.proveedor ?? "—"}</span>,
         },
         {
             key: "estado",
             label: "Estado",
+            card: "badge",
             render: (row) => <EstadoBadge estado={row.estado} />,
         },
         {
-            key: "montoTotal",
-            label: "Monto total",
-            render: (row) => (
-                <span style={{ color: "var(--accent)", fontWeight: 600, fontFamily: "monospace" }}>
-                    {formatMoneyMp(row.montoTotal)}
-                </span>
-            ),
+            key: "comprador",
+            label: "Comprador",
+            render: (row) => <span title={row.comprador || undefined}>{row.comprador ?? "—"}</span>,
         },
         {
             key: "fecha",
             label: "Fecha",
-            render: (row) => (
-                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>
-                    {formatFechaMp(row.fecha)}
-                </span>
-            ),
+            render: (row) => formatFechaMp(row.fecha),
+        },
+        {
+            key: "montoTotal",
+            label: "Monto total",
+            card: "highlight",
+            render: (row) => formatMoneyMp(row.montoTotal),
         },
     ];
 
@@ -282,7 +236,7 @@ export default function OrdenesCompraVisualizer() {
                 label={refreshing ? "Actualizando tabla…" : "Cargando órdenes de compra…"}
             >
                 {mostrandoCarga ? (
-                    <SkeletonTabla filas={8} columnas={6} />
+                    <SkeletonTabla filas={8} />
                 ) : !loading && totalFiltrados === 0 ? (
                     <div
                         style={{

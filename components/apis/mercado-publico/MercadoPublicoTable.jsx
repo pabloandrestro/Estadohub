@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import TablaSwipeHint from "@/components/shared/TablaSwipeHint";
 
 /**
  * Con totalFilas + onPaginaChange: paginación en servidor (`rows` ya es la página).
  * Sin ellos: pagina en cliente sobre `rows` (legacy).
+ *
+ * Cada columna puede declarar un rol de tarjeta vía `card`:
+ *   "id"        — identificador corto, arriba a la izquierda (monoespaciado, tenue).
+ *   "title"     — encabezado de la tarjeta.
+ *   "badge"     — se ubica arriba a la derecha, junto al título (p. ej. EstadoBadge).
+ *   "highlight" — valor destacado al pie (p. ej. un monto).
+ *   (sin rol)   — campo secundario, se muestra en la grilla de metadatos.
  */
 export default function MercadoPublicoTable({
     columns = [],
@@ -37,15 +43,25 @@ export default function MercadoPublicoTable({
         ? rows
         : rows.slice((pagina - 1) * paginaTamano, pagina * paginaTamano);
 
+    const colId = columns.find((c) => c.card === "id");
+    const colTitle = columns.find((c) => c.card === "title");
+    const colBadge = columns.find((c) => c.card === "badge");
+    const colHighlight = columns.find((c) => c.card === "highlight");
+    const colsMeta = columns.filter((c) => !c.card);
+
+    function valorDe(col, row) {
+        return col.render ? col.render(row) : (row[col.key] ?? "—");
+    }
+
     const estiloVer = {
         display: "inline-flex",
         alignItems: "center",
         gap: "0.25rem",
-        padding: "0.3rem 0.75rem",
-        borderRadius: "0.4rem",
+        padding: "0.4rem 0.9rem",
+        borderRadius: "0.5rem",
         border: "1px solid var(--accent)",
         color: "var(--accent)",
-        fontSize: "0.75rem",
+        fontSize: "0.78rem",
         fontWeight: 600,
         background: "transparent",
         cursor: "pointer",
@@ -53,157 +69,74 @@ export default function MercadoPublicoTable({
         whiteSpace: "nowrap",
     };
 
-    const stickyAcciones = {
-        position: "sticky",
-        right: 0,
-        zIndex: 1,
-        background: "var(--surface)",
-        boxShadow: "-8px 0 12px -12px rgba(0,0,0,0.45)",
-    };
-
     return (
         <div className="min-w-0">
-            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginBottom: "0.5rem" }}>
+            <p style={{ fontSize: "0.78rem", color: "var(--text-muted)", marginBottom: "0.65rem" }}>
                 {totalParaPaginas} {labelPlural} · Página {pagina} de {totalPaginas}
             </p>
 
-            <TablaSwipeHint />
+            {visibles.length === 0 ? (
+                <div className="registro-empty">{emptyMessage}</div>
+            ) : (
+                <div className="registro-grid">
+                    {visibles.map((row, index) => (
+                        <div key={`${row.id ?? row.codigo ?? "fila"}-${index}`} className="registro-card">
+                            <div className="registro-card-head">
+                                <div className="min-w-0">
+                                    {colId && (
+                                        <p className="registro-card-id">{valorDe(colId, row)}</p>
+                                    )}
+                                    {colTitle && (
+                                        <p className="registro-card-title">{valorDe(colTitle, row)}</p>
+                                    )}
+                                </div>
+                                {colBadge && <div className="shrink-0">{valorDe(colBadge, row)}</div>}
+                            </div>
 
-            <div
-                className="overflow-hidden rounded-xl"
-                style={{
-                    border: "1px solid var(--border)",
-                    background: "var(--surface)",
-                }}
-            >
-                <div className="overflow-x-auto">
-                    <table
-                        style={{
-                            width: "100%",
-                            minWidth: "720px",
-                            borderCollapse: "collapse",
-                            fontSize: "0.82rem",
-                        }}
-                    >
-                        <thead>
-                            <tr style={{ background: "var(--surface-2)" }}>
-                                {columns.map((col) => (
-                                    <th
-                                        key={col.key}
-                                        style={{
-                                            padding: "0.65rem 1rem",
-                                            textAlign: "left",
-                                            fontSize: "0.7rem",
-                                            fontWeight: 700,
-                                            letterSpacing: "0.1em",
-                                            textTransform: "uppercase",
-                                            color: "var(--accent)",
-                                            borderBottom: "1px solid var(--border)",
-                                            whiteSpace: "nowrap",
-                                        }}
-                                    >
-                                        {col.label}
-                                    </th>
-                                ))}
-                                <th
-                                    style={{
-                                        padding: "0.65rem 1rem",
-                                        textAlign: "right",
-                                        fontSize: "0.7rem",
-                                        fontWeight: 700,
-                                        letterSpacing: "0.1em",
-                                        textTransform: "uppercase",
-                                        color: "var(--accent)",
-                                        borderBottom: "1px solid var(--border)",
-                                        ...stickyAcciones,
-                                        background: "var(--surface-2)",
-                                    }}
-                                >
-                                    Acciones
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {visibles.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={columns.length + 1}
-                                        style={{
-                                            padding: "2.5rem 1rem",
-                                            textAlign: "center",
-                                            color: "var(--text-muted)",
-                                        }}
-                                    >
-                                        {emptyMessage}
-                                    </td>
-                                </tr>
-                            ) : (
-                                visibles.map((row, index) => {
-                                    const rowBg =
-                                        index % 2 === 0
-                                            ? "var(--surface)"
-                                            : "color-mix(in srgb, var(--surface-2) 40%, var(--surface))";
-                                    return (
-                                        <tr
-                                            key={row.id ?? row.codigo ?? index}
-                                            style={{
-                                                borderTop: "1px solid var(--border)",
-                                                background: rowBg,
-                                            }}
-                                        >
-                                            {columns.map((col) => (
-                                                <td
-                                                    key={col.key}
-                                                    style={{
-                                                        padding: "0.65rem 1rem",
-                                                        color: "var(--text-secondary)",
-                                                        verticalAlign: "middle",
-                                                        maxWidth: col.maxWidth,
-                                                    }}
-                                                >
-                                                    {col.render
-                                                        ? col.render(row)
-                                                        : (row[col.key] ?? "—")}
-                                                </td>
-                                            ))}
-                                            <td
-                                                style={{
-                                                    padding: "0.65rem 1rem",
-                                                    textAlign: "right",
-                                                    ...stickyAcciones,
-                                                    background: rowBg,
-                                                }}
-                                            >
-                                                {onVerDetalle ? (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => onVerDetalle(row)}
-                                                        style={estiloVer}
-                                                    >
-                                                        Ver ›
-                                                    </button>
-                                                ) : (
-                                                    <span
-                                                        style={{
-                                                            color: "var(--text-muted)",
-                                                            fontSize: "0.75rem",
-                                                        }}
-                                                    >
-                                                        —
-                                                    </span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })
+                            {colsMeta.length > 0 && (
+                                <div className="registro-card-meta">
+                                    {colsMeta.map((col) => (
+                                        <div key={col.key} className="registro-card-field">
+                                            <p className="registro-card-field-label">{col.label}</p>
+                                            <p className="registro-card-field-value">{valorDe(col, row)}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             )}
-                        </tbody>
-                    </table>
+
+                            {colHighlight && (
+                                <div className="registro-card-highlight">
+                                    <span className="registro-card-highlight-label">
+                                        {colHighlight.label}
+                                    </span>
+                                    <span className="registro-card-highlight-value">
+                                        {valorDe(colHighlight, row)}
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="registro-card-footer">
+                                {onVerDetalle ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => onVerDetalle(row)}
+                                        style={estiloVer}
+                                    >
+                                        Ver detalle ›
+                                    </button>
+                                ) : (
+                                    <span style={{ color: "var(--text-muted)", fontSize: "0.75rem" }}>
+                                        —
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            </div>
+            )}
 
             {totalPaginas > 1 && (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 py-2">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 py-2">
                     <span style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
                         Página {pagina} de {totalPaginas}
                     </span>

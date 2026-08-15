@@ -57,82 +57,36 @@ export default function LicitacionesVisualizer() {
         {
             key: "codigo",
             label: "Código",
-            render: (row) => (
-                <span style={{ color: "var(--text-muted)", fontSize: "0.75rem", fontFamily: "monospace" }}>
-                    {row.codigo ?? "—"}
-                </span>
-            ),
+            card: "id",
+            render: (row) => row.codigo ?? "—",
         },
         {
             key: "nombre",
             label: "Título",
-            render: (row) => {
-                const nombre = row.nombre ?? "—";
-                return (
-                    <span
-                        style={{
-                            display: "block",
-                            maxWidth: "280px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: "var(--text-secondary)",
-                            fontWeight: 600,
-                            minWidth: 0,
-                        }}
-                        title={nombre}
-                    >
-                        {nombre}
-                    </span>
-                );
-            },
+            card: "title",
+            render: (row) => <span title={row.nombre || undefined}>{row.nombre ?? "—"}</span>,
         },
         {
             key: "estado",
             label: "Estado",
+            card: "badge",
             render: (row) => <EstadoBadge estado={row.estado} />,
         },
         {
             key: "organismo",
             label: "Organismo",
-            render: (row) => {
-                const organismo = row.organismo ?? "—";
-                return (
-                    <span
-                        style={{
-                            display: "block",
-                            maxWidth: "200px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: "var(--text-muted)",
-                            fontSize: "0.78rem",
-                            minWidth: 0,
-                        }}
-                        title={organismo}
-                    >
-                        {organismo}
-                    </span>
-                );
-            },
-        },
-        {
-            key: "montoEstimado",
-            label: "Monto est.",
-            render: (row) => (
-                <span style={{ color: "var(--accent)", fontWeight: 600, fontFamily: "monospace", whiteSpace: "nowrap" }}>
-                    {formatMoneyMp(row.montoEstimado)}
-                </span>
-            ),
+            render: (row) => <span title={row.organismo || undefined}>{row.organismo ?? "—"}</span>,
         },
         {
             key: "fechaCierre",
             label: "Fecha cierre",
-            render: (row) => (
-                <span style={{ color: "var(--text-muted)", fontSize: "0.78rem", whiteSpace: "nowrap" }}>
-                    {formatFechaMp(row.fechaCierre, { conHora: true })}
-                </span>
-            ),
+            render: (row) => formatFechaMp(row.fechaCierre, { conHora: true }),
+        },
+        {
+            key: "montoEstimado",
+            label: "Monto est.",
+            card: "highlight",
+            render: (row) => formatMoneyMp(row.montoEstimado),
         },
     ];
 
@@ -282,7 +236,7 @@ export default function LicitacionesVisualizer() {
                 label={refreshing ? "Actualizando tabla…" : "Cargando licitaciones…"}
             >
                 {mostrandoCarga ? (
-                    <SkeletonTabla filas={8} columnas={5} />
+                    <SkeletonTabla filas={8} />
                 ) : !loading && totalFiltrados === 0 ? (
                     <div
                         style={{
