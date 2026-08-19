@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Building2, Filter, Layers, Wallet } from "lucide-react";
 import MpSubnav from "./MpSubnav";
+import KpiGrande from "@/components/shared/KpiGrande";
 import MercadoPublicoTable from "./MercadoPublicoTable";
 import SkeletonTabla from "@/components/shared/SkeletonTabla";
 import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
@@ -11,6 +13,7 @@ import AvisoDesdeDb from "./AvisoDesdeDb";
 import MercadoPublicoDetalleModal from "./MercadoPublicoDetalleModal";
 import EstadoBadge from "./EstadoBadge";
 import { formatFechaMp, formatMoneyMp } from "@/lib/mercado-publico/formatMp";
+import { formatCLPCompacto } from "@/utils/formatCurrency";
 
 const PAGE_SIZE = 5;
 
@@ -27,7 +30,7 @@ export default function OrdenesCompraVisualizer() {
         setPagina(1);
     }, [consulta, estadoFiltro, orden]);
 
-    const { data, loading, refreshing, error, total, totalFiltrados, estados } =
+    const { data, loading, refreshing, error, total, totalFiltrados, estados, montoTotalOferta } =
         useMercadoPublico("ordenes-compra", {
             q: consulta,
             estado: estadoFiltro,
@@ -123,17 +126,17 @@ export default function OrdenesCompraVisualizer() {
                 </p>
             </div>
 
-            <div className="kpi-grid kpi-grid--3">
-                {[
-                    { label: "Registros", value: total ?? 0 },
-                    { label: "Filtrados", value: totalFiltrados ?? 0 },
-                    { label: "Estados", value: estados.length },
-                ].map((item) => (
-                    <div key={item.label} className="kpi-card">
-                        <p className="kpi-card-label">{item.label}</p>
-                        <p className="kpi-card-value">{item.value}</p>
-                    </div>
-                ))}
+            <div className="kpi-grid kpi-grid--4">
+                <KpiGrande icono={Building2} titulo="Registros" valor={total ?? 0} color="var(--accent)" />
+                <KpiGrande icono={Filter} titulo="Filtrados" valor={totalFiltrados ?? 0} color="var(--warning)" />
+                <KpiGrande icono={Layers} titulo="Estados" valor={estados.length} color="var(--danger)" />
+                <KpiGrande
+                    icono={Wallet}
+                    titulo="Monto total transado"
+                    valor={montoTotalOferta != null ? formatCLPCompacto(montoTotalOferta) : "—"}
+                    tooltip={montoTotalOferta != null ? formatMoneyMp(montoTotalOferta) : undefined}
+                    color="var(--success)"
+                />
             </div>
             <AvisoDesdeDb
                 visible
