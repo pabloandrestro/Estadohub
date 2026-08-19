@@ -229,6 +229,16 @@ function aplicarFiltrosUsuario(consulta, modulo, { q, estado, region }) {
     return c;
 }
 
+/** KPI no crítico: si el RPC falla, no debe tumbar el listado completo. */
+function extraerMontoTotalOferta(res) {
+    if (!res) return null;
+    if (res.error) {
+        console.warn("[listado MP] suma monto oferta falló:", res.error.message);
+        return null;
+    }
+    return Number(res.data ?? 0);
+}
+
 /**
  * Listado paginado + filtros en BD.
  * Mantiene total del módulo (solo filtros base) y total filtrado (base + usuario).
@@ -269,6 +279,11 @@ export async function listarFilasMercadoPublico(
     );
     const facetasPromise = incluirFacetas
         ? listarFacetasLivianas(supabase, modulo, config)
+        : Promise.resolve(null);
+    // Igual que facetas: caro de calcular y no cambia con la página/búsqueda,
+    // así que solo se pide junto con las facetas (carga única por sesión).
+    const sumaMontoPromise = incluirFacetas
+        ? supabase.rpc("mp_suma_monto_oferta", { p_modulo: modulo })
         : Promise.resolve(null);
 
     // Ranking por parecido; si eligen precio/fecha, reordena ese set
@@ -313,9 +328,10 @@ export async function listarFilasMercadoPublico(
                 // `to` es inclusivo (estilo .range); slice es exclusivo → from + size
                 const filasPagina = filasUi.slice(from, from + size);
 
-                const [countModuloRes, facetas] = await Promise.all([
+                const [countModuloRes, facetas, sumaMontoRes] = await Promise.all([
                     countModuloPromise,
                     facetasPromise,
+                    sumaMontoPromise,
                 ]);
                 if (countModuloRes.error) throw countModuloRes.error;
 
@@ -336,6 +352,7 @@ export async function listarFilasMercadoPublico(
                         modulo === "compra-agil"
                             ? fusionarFacetas(regionesBase, regionesEnPagina)
                             : [],
+                    montoTotalOferta: extraerMontoTotalOferta(sumaMontoRes),
                     busquedaPorSimilitud: true,
                     interpretacionConsulta: {
                         textoSemantico: interpretacion.textoSemantico,
@@ -395,10 +412,11 @@ export async function listarFilasMercadoPublico(
         })
         .range(from, to);
 
-    const [countModuloRes, dataRes, facetas] = await Promise.all([
+    const [countModuloRes, dataRes, facetas, sumaMontoRes] = await Promise.all([
         countModuloPromise,
         consulta,
         facetasPromise,
+        sumaMontoPromise,
     ]);
 
     if (countModuloRes.error) throw countModuloRes.error;
@@ -426,6 +444,7 @@ export async function listarFilasMercadoPublico(
             modulo === "compra-agil"
                 ? fusionarFacetas(regionesBase, regionesEnPagina)
                 : [],
+        montoTotalOferta: extraerMontoTotalOferta(sumaMontoRes),
         busquedaPorSimilitud: false,
     };
 }

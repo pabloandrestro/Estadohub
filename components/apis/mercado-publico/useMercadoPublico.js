@@ -12,6 +12,8 @@ function normalizarRespuesta(json) {
     const regiones = Array.isArray(json?.regiones) ? json.regiones : [];
     const pagina = Number(json?.pagina ?? 1);
     const pageSize = Number(json?.pageSize ?? PAGE_SIZE_DEFAULT);
+    const montoTotalOferta =
+        json?.montoTotalOferta != null ? Number(json.montoTotalOferta) : null;
 
     return {
         filas,
@@ -21,6 +23,7 @@ function normalizarRespuesta(json) {
         regiones,
         pagina,
         pageSize,
+        montoTotalOferta,
         error: json?.error ? json.error : null,
     };
 }
@@ -62,6 +65,7 @@ export function useMercadoPublico(modulo, filtros = {}) {
         regiones: [],
         pagina: 1,
         pageSize: PAGE_SIZE_DEFAULT,
+        montoTotalOferta: null,
     });
 
     const abortRef = useRef(null);
@@ -141,6 +145,8 @@ export function useMercadoPublico(modulo, filtros = {}) {
                     : fusionarSiVienen(prev.regiones, normalizado.regiones),
                 pagina: normalizado.pagina,
                 pageSize: normalizado.pageSize,
+                montoTotalOferta:
+                    normalizado.montoTotalOferta ?? prev.montoTotalOferta,
             }));
         } catch (error) {
             if (error?.name === "AbortError") return;

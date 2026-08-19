@@ -13,33 +13,12 @@ import {
 } from "lucide-react";
 import BotonesExportar from "@/components/shared/BotonesExportar";
 import TableLoadingOverlay from "@/components/shared/TableLoadingOverlay";
+import KpiGrande from "@/components/shared/KpiGrande";
 import MercadoPublicoTable from "@/components/apis/mercado-publico/MercadoPublicoTable";
 import GraficoConcentracion from "@/components/apis/tgr/GraficoConcentracion";
 import { formatCLP, formatCLPCompacto } from "@/utils/formatCurrency";
 
 const POR_PAGINA = 5;
-
-function KpiGrande({ icono: Icono, titulo, valor, color }) {
-    return (
-        <div className="kpi-tgr">
-            <div
-                className="kpi-tgr-icon"
-                style={{
-                    background: `color-mix(in srgb, ${color} 12%, transparent)`,
-                    border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`,
-                }}
-            >
-                <Icono size={18} style={{ color }} />
-            </div>
-            <div className="min-w-0">
-                <p className="kpi-tgr-label">{titulo}</p>
-                <p className="kpi-tgr-value" style={{ color }}>
-                    {valor}
-                </p>
-            </div>
-        </div>
-    );
-}
 
 export default function RematesVisualizer({ datos = [] }) {
     const router = useRouter();

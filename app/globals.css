@@ -518,6 +518,11 @@
     gap: 1rem;
   }
 
+  .kpi-grid--5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
   .kpi-card {
     border-radius: 0.9rem;
     padding: 1rem;
