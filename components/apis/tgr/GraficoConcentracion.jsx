@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { MapPin } from "lucide-react";
 
 export default function GraficoConcentracion({ datos }) {
     const top10 = useMemo(() => {
@@ -18,77 +19,67 @@ export default function GraficoConcentracion({ datos }) {
     const max = top10[0]?.total || 1;
 
     return (
-        <div
-            className="min-w-0"
-            style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: "12px",
-                padding: "1.25rem",
-                height: "100%",
-            }}
-        >
-            <h3 style={{
-                color: "var(--text-secondary)",
-                fontSize: "0.8rem",
-                fontWeight: 700,
-                marginBottom: "1rem",
-            }}>
-                Concentración Geográfica{" "}
-                <span style={{ color: "var(--warning)" }}>(Top 10)</span>
-            </h3>
+        <div className="relative min-w-0 rounded-2xl bg-slate-900/60 p-5 backdrop-blur-xl border border-slate-800/80 shadow-md h-full flex flex-col justify-between">
+            <div>
+                {/* Título de la sección */}
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <MapPin size={16} className="text-cyan-400" />
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                            Concentración Geográfica
+                        </h3>
+                    </div>
+                    <span className="rounded-md bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-bold text-amber-400 border border-amber-500/20">
+                        Top 10
+                    </span>
+                </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
-                {top10.map(({ comuna, total }, i) => (
-                    <div key={comuna} className="flex min-w-0 items-center gap-2">
+                {/* Lista de barras */}
+                <div className="space-y-3">
+                    {top10.map(({ comuna, total }, i) => {
+                        const porcentaje = Math.max((total / max) * 100, 3);
+                        const esPrimero = i === 0;
 
-                        {/* Label comuna */}
-                        <p
-                            className="w-16 shrink-0 truncate text-right sm:w-[4.5rem]"
-                            style={{
-                                color: "var(--text-muted)",
-                                fontSize: "0.68rem",
-                                fontFamily: "monospace",
-                            }}
-                            title={comuna}
-                        >
-                            {comuna}
-                        </p>
+                        return (
+                            <div key={comuna} className="group flex items-center gap-3">
+                                {/* Nombre de la Comuna */}
+                                <p
+                                    className="w-20 shrink-0 truncate text-right font-mono text-[11px] font-medium text-slate-400 group-hover:text-slate-200 transition-colors"
+                                    title={comuna}
+                                >
+                                    {comuna}
+                                </p>
 
-                        {/* Barra */}
-                        <div style={{
-                            flex: 1,
-                            background: "var(--surface-2)",
-                            borderRadius: "4px",
-                            height: "20px",
-                            overflow: "hidden",
-                        }}>
-                            <div style={{
-                                width: `${(total / max) * 100}%`,
-                                height: "100%",
-                                // Naranja para #1, azul apagado para el resto — igual que referencia
-                                background: i === 0
-                                    ? "var(--warning)"
-                                    : "color-mix(in srgb, var(--accent) 70%, var(--surface))",
-                                borderRadius: "4px",
-                                transition: "width 0.6s ease",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "flex-end",
-                                paddingRight: "6px",
-                            }}>
-                                <span style={{
-                                    color: i === 0 ? "#0a0a0f" : "var(--text)",
-                                    fontSize: "0.65rem",
-                                    fontFamily: "monospace",
-                                    fontWeight: 700,
-                                }}>
+                                {/* Contenedor de la Barra */}
+                                <div className="relative flex-1 h-3 rounded-full bg-slate-950/70 p-0.5 border border-slate-800/60">
+                                    <div
+                                        className={`h-full rounded-full transition-all duration-700 ${
+                                            esPrimero
+                                                ? "bg-gradient-to-r from-amber-500 to-orange-400 shadow-[0_0_12px_rgba(245,158,11,0.35)]"
+                                                : "bg-gradient-to-r from-cyan-500 to-blue-500/80 shadow-[0_0_8px_rgba(6,182,212,0.2)]"
+                                        }`}
+                                        style={{ width: `${porcentaje}%` }}
+                                    />
+                                </div>
+
+                                {/* Valor Numérico */}
+                                <span
+                                    className={`w-7 shrink-0 text-left font-mono text-[11px] font-bold ${
+                                        esPrimero ? "text-amber-400" : "text-cyan-400"
+                                    }`}
+                                >
                                     {total}
                                 </span>
                             </div>
-                        </div>
-                    </div>
-                ))}
+                        );
+                    })}
+                </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-800/50 text-right">
+                <span className="text-[10px] font-mono text-slate-500">
+                    Distribución por comuna de juzgado
+                </span>
             </div>
         </div>
     );
