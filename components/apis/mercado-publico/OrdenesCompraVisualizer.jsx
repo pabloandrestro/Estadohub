@@ -126,16 +126,35 @@ export default function OrdenesCompraVisualizer() {
                 </p>
             </div>
 
-            <div className="kpi-grid kpi-grid--4">
-                <KpiGrande icono={Building2} titulo="Registros" valor={total ?? 0} color="var(--accent)" />
-                <KpiGrande icono={Filter} titulo="Filtrados" valor={totalFiltrados ?? 0} color="var(--warning)" />
-                <KpiGrande icono={Layers} titulo="Estados" valor={estados.length} color="var(--danger)" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiGrande
+                    icono={Building2}
+                    titulo="Registros"
+                    valor={total ?? 0}
+                    color="var(--accent)"
+                    glowColor="color-mix(in srgb, var(--accent) 25%, transparent)"
+                />
+                <KpiGrande
+                    icono={Filter}
+                    titulo="Filtrados"
+                    valor={totalFiltrados ?? 0}
+                    color="var(--warning)"
+                    glowColor="color-mix(in srgb, var(--warning) 25%, transparent)"
+                />
+                <KpiGrande
+                    icono={Layers}
+                    titulo="Estados"
+                    valor={estados.length}
+                    color="var(--danger)"
+                    glowColor="color-mix(in srgb, var(--danger) 25%, transparent)"
+                />
                 <KpiGrande
                     icono={Wallet}
                     titulo="Monto total transado"
                     valor={montoTotalOferta != null ? formatCLPCompacto(montoTotalOferta) : "—"}
                     tooltip={montoTotalOferta != null ? formatMoneyMp(montoTotalOferta) : undefined}
                     color="var(--success)"
+                    glowColor="color-mix(in srgb, var(--success) 25%, transparent)"
                 />
             </div>
             <AvisoDesdeDb
