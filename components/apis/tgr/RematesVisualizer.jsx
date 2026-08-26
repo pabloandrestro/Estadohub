@@ -51,7 +51,6 @@ function KpiGrande({ icono: Icono, titulo, valor, color, glowColor }) {
         </div>
     );
 }
-
 export default function RematesVisualizer({ datos = [] }) {
     const router = useRouter();
     const [busqueda, setBusqueda] = useState("");
@@ -245,7 +244,7 @@ export default function RematesVisualizer({ datos = [] }) {
             </div>
 
             <p className="text-left sm:text-right text-[11px] font-mono text-slate-500">
-                // fuente: TGR Chile — revalidación automática cada 60 min
+                {"// fuente: TGR Chile — revalidación automática cada 60 min"}
             </p>
         </div>
     );
