@@ -151,27 +151,27 @@ export default function RematesVisualizer({ datos = [] }) {
             </div>
 
             {/* Barra de Filtros Estilizada */}
-            <div className="flex min-w-0 flex-wrap items-center gap-3 rounded-2xl bg-slate-900/60 p-3.5 backdrop-blur-xl border border-slate-800/80 shadow-md">
+            <div className="kpi-glow-card flex min-w-0 flex-wrap items-center gap-3 rounded-2xl p-3.5 backdrop-blur-xl border shadow-md">
                 <div className="relative min-w-0 flex-[2_1_14rem]">
-                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-400" />
+                    <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--glass-accent)]" />
                     <input
                         type="text"
                         placeholder="Buscar por Deudor, Dirección o Rol..."
                         value={busqueda}
                         onChange={(e) => { setBusqueda(e.target.value); setPagina(1); }}
-                        className="w-full rounded-xl bg-slate-950/60 pl-10 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 border border-slate-800/90 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                        className="glass-field w-full rounded-xl pl-10 pr-3 py-2 text-sm border focus:outline-none transition-all"
                     />
                 </div>
 
                 <div className="relative min-w-0 flex-1 basis-[10rem]">
-                    <Filter size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Filter size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--glass-text-muted)]" />
                     <select
                         value={comunaFiltro}
                         onChange={(e) => { setComunaFiltro(e.target.value); setPagina(1); }}
-                        className="w-full rounded-xl bg-slate-950/60 pl-10 pr-4 py-2 text-sm text-slate-200 border border-slate-800/90 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all appearance-none cursor-pointer"
+                        className="glass-field w-full rounded-xl pl-10 pr-4 py-2 text-sm border focus:outline-none transition-all appearance-none cursor-pointer"
                     >
                         {comunas.map((c) => (
-                            <option key={c} value={c} className="bg-slate-900 text-slate-200">{c}</option>
+                            <option key={c} value={c} className="bg-[var(--glass-bg-strong)] text-[var(--glass-text)]">{c}</option>
                         ))}
                     </select>
                 </div>
@@ -182,9 +182,9 @@ export default function RematesVisualizer({ datos = [] }) {
                     <button
                         onClick={forzarRecarga}
                         disabled={recargando}
-                        className="flex items-center gap-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white px-3.5 py-2 text-xs font-mono font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="glass-btn-ghost flex items-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-mono font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <RefreshCw size={13} className={recargando ? "animate-spin text-cyan-400" : "text-slate-400"} />
+                        <RefreshCw size={13} className={recargando ? "animate-spin text-[var(--glass-accent)]" : "text-[var(--glass-text-muted)]"} />
                         {recargando ? "Recargando..." : "Recargar"}
                     </button>
                 </div>
@@ -212,7 +212,7 @@ export default function RematesVisualizer({ datos = [] }) {
                 <GraficoConcentracion datos={datosFiltrados} />
             </div>
 
-            <p className="text-left sm:text-right text-[11px] font-mono text-slate-500">
+            <p className="text-left sm:text-right text-[11px] font-mono text-[var(--glass-text-muted)]">
                 {"// fuente: TGR Chile — revalidación automática cada 60 min"}
             </p>
         </div>

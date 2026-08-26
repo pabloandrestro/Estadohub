@@ -36,6 +36,72 @@
   --danger: #dc2626;
 }
 
+/* Tokens del look "glass" (tarjetas TGR / Mercado Público) — independientes
+   de los tokens generales de arriba para no perder la tonalidad original
+   pensada para modo oscuro. */
+:root,
+[data-theme="dark"] {
+  --glass-bg: rgba(15, 23, 42, 0.6);
+  --glass-bg-strong: rgba(2, 6, 23, 0.7);
+  --glass-bg-soft: rgba(15, 23, 42, 0.4);
+  --glass-surface-2: rgba(30, 41, 59, 0.6);
+  --glass-surface-2-solid: #1e293b;
+
+  --glass-border: rgba(30, 41, 59, 0.8);
+  --glass-border-soft: rgba(30, 41, 59, 0.6);
+  --glass-border-strong: rgba(51, 65, 85, 0.6);
+
+  --glass-text: #f1f5f9;
+  --glass-text-bright: #ffffff;
+  --glass-text-secondary: #cbd5e1;
+  --glass-text-muted: #94a3b8;
+  --glass-text-faint: #64748b;
+
+  --glass-accent: #22d3ee;
+  --glass-accent-strong: #06b6d4;
+  --glass-accent-soft: #67e8f9;
+  --glass-accent-bg: rgba(8, 51, 68, 0.3);
+  --glass-accent-border: rgba(6, 182, 212, 0.3);
+  --glass-accent-contrast: #020617;
+
+  --glass-success: #34d399;
+  --glass-success-glow: rgba(52, 211, 153, 0.25);
+  --glass-warning: #fbbf24;
+  --glass-warning-bg: rgba(245, 158, 11, 0.1);
+  --glass-warning-border: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="light"] {
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-bg-strong: rgba(241, 245, 249, 0.9);
+  --glass-bg-soft: rgba(248, 250, 252, 0.7);
+  --glass-surface-2: rgba(226, 232, 240, 0.7);
+  --glass-surface-2-solid: #e2e8f0;
+
+  --glass-border: rgba(203, 213, 225, 0.9);
+  --glass-border-soft: rgba(203, 213, 225, 0.7);
+  --glass-border-strong: rgba(148, 163, 184, 0.6);
+
+  --glass-text: #0f172a;
+  --glass-text-bright: #020617;
+  --glass-text-secondary: #334155;
+  --glass-text-muted: #64748b;
+  --glass-text-faint: #94a3b8;
+
+  --glass-accent: #0284c7;
+  --glass-accent-strong: #0369a1;
+  --glass-accent-soft: #0369a1;
+  --glass-accent-bg: rgba(2, 132, 199, 0.1);
+  --glass-accent-border: rgba(2, 132, 199, 0.3);
+  --glass-accent-contrast: #ffffff;
+
+  --glass-success: #059669;
+  --glass-success-glow: rgba(5, 150, 105, 0.18);
+  --glass-warning: #d97706;
+  --glass-warning-bg: rgba(217, 119, 6, 0.1);
+  --glass-warning-border: rgba(217, 119, 6, 0.25);
+}
+
 @media (min-width: 640px) {
   :root,
   [data-theme="dark"],
@@ -182,6 +248,104 @@
   color: var(--text-secondary);
   font-size: 1.05rem;
   font-weight: 800;
+}
+
+.kpi-glow-card {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.kpi-glow-card:hover {
+  border-color: var(--glass-border-strong);
+}
+
+.kpi-glow-label {
+  color: var(--glass-text-muted);
+}
+
+.kpi-glow-value {
+  color: var(--glass-text-bright);
+}
+
+.glass-field {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border);
+  color: var(--glass-text);
+}
+
+.glass-field::placeholder {
+  color: var(--glass-text-faint);
+}
+
+.glass-field:focus {
+  border-color: var(--glass-accent-strong);
+  box-shadow: 0 0 0 1px var(--glass-accent-border);
+}
+
+.glass-btn-ghost {
+  background: var(--glass-surface-2);
+  border-color: var(--glass-border-strong);
+  color: var(--glass-text-secondary);
+}
+
+.glass-btn-ghost:hover:not(:disabled) {
+  background: var(--glass-surface-2-solid);
+  border-color: var(--glass-border-strong);
+  color: var(--glass-text-bright);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.glass-track {
+  background: var(--glass-bg-strong);
+  border-color: var(--glass-border-soft);
+}
+
+.badge-top {
+  background: var(--glass-warning-bg);
+  border-color: var(--glass-warning-border);
+  color: var(--glass-warning);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+}
+
+.glass-card:hover {
+  border-color: var(--glass-accent-border);
+  box-shadow: 0 0 20px var(--glass-accent-border);
+}
+
+.glass-chip {
+  background: var(--glass-surface-2-solid);
+  border-color: var(--glass-border-strong);
+  color: var(--glass-text-muted);
+}
+
+.group:hover .glass-chip {
+  border-color: var(--glass-accent-border);
+  color: var(--glass-accent-soft);
+}
+
+.glass-btn-primary {
+  background: var(--glass-accent-bg);
+  border-color: var(--glass-accent-border);
+  color: var(--glass-accent);
+}
+
+.glass-btn-primary:hover {
+  background: var(--glass-accent-strong);
+  border-color: var(--glass-accent-strong);
+  color: var(--glass-accent-contrast);
+}
+
+.glass-highlight-value {
+  color: var(--glass-success);
+  filter: drop-shadow(0 0 10px var(--glass-success-glow));
 }
 
 .tgr-main-grid {
