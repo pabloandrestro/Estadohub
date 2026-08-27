@@ -30,7 +30,7 @@ export default function TableLoadingOverlay({
                     <div className="table-load-center">
                         <div className="table-load-logo-wrap">
                             <Image
-                                src="/logo-hublab.jpg"
+                                src="/logo-hublab.webp"
                                 alt=""
                                 width={72}
                                 height={72}

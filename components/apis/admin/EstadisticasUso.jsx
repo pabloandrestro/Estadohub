@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import dynamic from "next/dynamic";
-import { CheckCircle2, TriangleAlert } from "lucide-react";
+import { Activity, CalendarClock, CheckCircle2, Globe2, TriangleAlert, Users } from "lucide-react";
+import KpiGrande from "@/components/shared/KpiGrande";
 import {
     ResponsiveContainer,
     AreaChart,
@@ -84,48 +85,13 @@ function horaSantiago(iso) {
     }
 }
 
-function TarjetaKpi({ etiqueta, valor, sufijo }) {
-    return (
-        <div
-            style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: "0.75rem",
-                padding: "1rem 1.1rem",
-            }}
-        >
-            <p
-                style={{
-                    margin: 0,
-                    fontSize: "0.68rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: "var(--text-muted)",
-                }}
-            >
-                {etiqueta}
-            </p>
-            <p
-                style={{
-                    margin: "0.35rem 0 0",
-                    fontSize: "1.6rem",
-                    fontWeight: 800,
-                    fontFamily: "monospace",
-                    color: "var(--text-secondary)",
-                    lineHeight: 1.1,
-                }}
-            >
-                {valor}
-                {sufijo ? (
-                    <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--text-muted)" }}>
-                        {" "}
-                        {sufijo}
-                    </span>
-                ) : null}
-            </p>
-        </div>
-    );
-}
+// Cada KPI reutiliza el patrón glassmorphism con icono y color de KpiGrande.
+const KPIS = [
+    { clave: "total_eventos", etiqueta: "Eventos", icono: Activity, color: "var(--accent)" },
+    { clave: "usuarios_activos", etiqueta: "Usuarios activos", icono: Users, color: "var(--success)" },
+    { clave: "paises", etiqueta: "Países", icono: Globe2, color: "var(--warning)" },
+    { clave: "eventos_hoy", etiqueta: "Eventos hoy", icono: CalendarClock, color: "var(--danger)" },
+];
 
 function TooltipChart({ active, payload, label, formatoLabel }) {
     if (!active || !payload?.length) return null;
@@ -171,10 +137,9 @@ function TooltipChart({ active, payload, label, formatoLabel }) {
     );
 }
 
+// Mismo look "glass" que las tarjetas KPI / paneles de TGR y Mercado Público.
+const CLASE_MARCO = "glass-panel rounded-2xl border backdrop-blur-xl shadow-md";
 const marco = {
-    background: "var(--surface)",
-    border: "1px solid var(--border)",
-    borderRadius: "0.75rem",
     padding: "1.1rem 1.1rem 0.9rem",
 };
 
@@ -300,8 +265,8 @@ export default function EstadisticasUso({
 
             {sinDatos && (
                 <div
+                    className={CLASE_MARCO}
                     style={{
-                        ...marco,
                         padding: "1.1rem",
                         fontSize: "0.82rem",
                         color: "var(--text-muted)",
@@ -317,17 +282,23 @@ export default function EstadisticasUso({
                 style={{
                     display: "grid",
                     gap: "0.85rem",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
                 }}
             >
-                <TarjetaKpi etiqueta="Eventos" valor={nf.format(resumen?.total_eventos ?? 0)} />
-                <TarjetaKpi etiqueta="Usuarios activos" valor={nf.format(resumen?.usuarios_activos ?? 0)} />
-                <TarjetaKpi etiqueta="Países" valor={nf.format(resumen?.paises ?? 0)} />
-                <TarjetaKpi etiqueta="Eventos hoy" valor={nf.format(resumen?.eventos_hoy ?? 0)} />
+                {KPIS.map((k) => (
+                    <KpiGrande
+                        key={k.clave}
+                        icono={k.icono}
+                        titulo={k.etiqueta}
+                        valor={nf.format(resumen?.[k.clave] ?? 0)}
+                        color={k.color}
+                        glowColor={`color-mix(in srgb, ${k.color} 25%, transparent)`}
+                    />
+                ))}
             </div>
 
             {/* Tráfico por día */}
-            <div style={marco}>
+            <div className={CLASE_MARCO} style={marco}>
                 <h2 style={tituloBloque}>Tráfico por día</h2>
                 <p style={subtituloBloque}>Eventos de navegación y usuarios únicos por jornada.</p>
                 <div style={{ width: "100%", height: 300 }}>
@@ -384,7 +355,7 @@ export default function EstadisticasUso({
             </div>
 
             {/* Mapa mundial */}
-            <div style={{ ...marco, padding: "1.1rem 0.7rem 0.9rem" }}>
+            <div className={CLASE_MARCO} style={{ padding: "1.1rem 0.7rem 0.9rem" }}>
                 <h2 style={{ ...tituloBloque, padding: "0 0.4rem" }}>Alcance geográfico</h2>
                 <p style={{ ...subtituloBloque, padding: "0 0.4rem" }}>
                     Cada país se tiñe de azul según su volumen de eventos (escala relativa al país con más uso).
@@ -393,7 +364,7 @@ export default function EstadisticasUso({
             </div>
 
             {/* Rutas más visitadas */}
-            <div style={marco}>
+            <div className={CLASE_MARCO} style={marco}>
                 <h2 style={tituloBloque}>Rutas más visitadas</h2>
                 <p style={subtituloBloque}>Secciones del dashboard con más navegación en el período.</p>
                 <div style={{ width: "100%", height: Math.max(180, serieRuta.length * 34) }}>
@@ -426,7 +397,7 @@ export default function EstadisticasUso({
 
             {/* Tabla por país (vista accesible de respaldo) */}
             {seriePais.length > 0 && (
-                <div style={marco}>
+                <div className={CLASE_MARCO} style={marco}>
                     <h2 style={tituloBloque}>Detalle por país</h2>
                     <p style={subtituloBloque}>Mismos datos del mapa, en tabla.</p>
                     <div style={{ overflowX: "auto" }}>

@@ -36,7 +36,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ## Pendiente
 
 - Hacer traslucido el fondo.
-- Agregar una casilla de mensajes para que nos llegue informacion. Agregar una pestaña de Plataforma beta y con mensaje de ayudanos a mejorar.
-- Agregar un apartado para obtener datos de uso de la app.
 - Acceso a los convenios marcos con la api de mercado publico.
 - Discutir un poco que otra plataforma del estado nos podriamos conectar. ([Cenavast Medicamentos](https://www.cenabast.cl/)).

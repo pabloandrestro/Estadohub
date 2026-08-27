@@ -249,7 +249,7 @@ export default function LoginClient() {
             >
                 {/* Logo */}
                 <div style={{ width: "100%", borderRadius: "12px", overflow: "hidden", border: "1px solid var(--border)", lineHeight: 0, marginBottom: "1.15rem" }}>
-                    <Image src="/logo-hublab.jpg" alt="HubLab logo" width={420} height={150} priority style={{ width: "100%", height: "auto", objectFit: "contain", display: "block" }} />
+                    <Image src="/logo-hublab.webp" alt="HubLab logo" width={420} height={150} priority style={{ width: "100%", height: "auto", objectFit: "contain", display: "block" }} />
                 </div>
 
                 {/* Marca */}

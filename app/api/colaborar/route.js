@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { escaparHtml, fila, enlaceCorreo, layoutCorreo, adjuntoLogo } from "@/lib/email/plantilla";
 
 export async function POST(request) {
   try {
@@ -21,17 +22,18 @@ export async function POST(request) {
       from: "EstadoHUB <onboarding@resend.dev>",
       to: process.env.COLABORACION_EMAIL,
       subject: `🤝 Nuevo colaborador: ${nombre}`,
-      html: `
-        <div style="font-family: monospace; max-width: 600px; margin: 0 auto; padding: 24px; background: #171614; color: #cdccca; border-radius: 12px;">
-          <h2 style="color: #4f98a3; margin-bottom: 24px;">Nuevo colaborador interesado en EstadoHUB</h2>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr><td style="padding: 8px 0; color: #797876; width: 160px;">Nombre</td><td style="padding: 8px 0; color: #cdccca;">${nombre}</td></tr>
-            <tr><td style="padding: 8px 0; color: #797876;">Profesión / área</td><td style="padding: 8px 0; color: #cdccca;">${profesion || "—"}</td></tr>
-            <tr><td style="padding: 8px 0; color: #797876;">Cómo quiere aportar</td><td style="padding: 8px 0; color: #cdccca;">${interes || "—"}</td></tr>
-            <tr><td style="padding: 8px 0; color: #797876;">Correo de contacto</td><td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #4f98a3;">${email}</a></td></tr>
-          </table>
-        </div>
-      `,
+      html: layoutCorreo({
+        preview: `Nueva postulación de ${nombre} — ${profesion || "sin área"}`,
+        titulo: "Nuevo colaborador interesado",
+        filas: [
+          fila("Nombre", escaparHtml(nombre)),
+          fila("Profesión / área", escaparHtml(profesion) || "—"),
+          fila("Correo de contacto", enlaceCorreo(email)),
+        ],
+        mensaje: interes || undefined,
+        pie: "Postulación enviada desde el formulario «¿Quieres colaborar?» de EstadoHUB.",
+      }),
+      attachments: [adjuntoLogo()],
     });
 
     return NextResponse.json({ success: true });

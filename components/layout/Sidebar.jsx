@@ -6,6 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { BarChart3, X } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import BetaFeedbackCard from "@/components/layout/BetaFeedbackCard";
 
 const nav = [
     {
@@ -107,7 +108,7 @@ export default function Sidebar({ open = false, onClose }) {
                             lineHeight: 0,
                         }}>
                             <Image
-                                src="/logo-hublab.jpg"
+                                src="/logo-hublab.webp"
                                 alt="HubLab logo"
                                 width={220}
                                 height={80}
@@ -387,6 +388,10 @@ export default function Sidebar({ open = false, onClose }) {
                         </div>
                     )}
                 </nav>
+
+                <div style={{ borderTop: "1px solid var(--border)" }}>
+                    <BetaFeedbackCard />
+                </div>
             </aside>
         </>
     );
