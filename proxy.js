@@ -11,7 +11,7 @@ function esRutaPublica(pathname) {
 }
 
 export async function proxy(request) {
-    const { response, user } = await updateSession(request);
+    const { response, user, supabase } = await updateSession(request);
     const { pathname } = request.nextUrl;
 
     // Sin sesión intentando entrar a una ruta protegida lo manda al login
@@ -30,6 +30,23 @@ export async function proxy(request) {
         url.pathname = "/dashboard/tgr";
         url.search = "";
         return NextResponse.redirect(url);
+    }
+
+    // Sección de administración: exige rol 'admin'. La consulta extra solo
+    // ocurre en rutas /dashboard/admin/*.
+    if (user && pathname.startsWith("/dashboard/admin")) {
+        const { data: perfil } = await supabase
+            .from("usuarios")
+            .select("rol")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        if (perfil?.rol !== "admin") {
+            const url = request.nextUrl.clone();
+            url.pathname = "/dashboard/tgr";
+            url.search = "";
+            return NextResponse.redirect(url);
+        }
     }
 
     return response;

@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { X } from "lucide-react";
+import { BarChart3, X } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const nav = [
     {
@@ -48,6 +50,29 @@ const mpItems = [
 export default function Sidebar({ open = false, onClose }) {
     const pathname = usePathname();
     const enMP = pathname.startsWith("/dashboard/mercado-publico");
+
+    // El enlace a la sección de administración solo se muestra a los admin.
+    // La protección real de la ruta está en proxy.js y en el layout del servidor.
+    const [esAdmin, setEsAdmin] = useState(false);
+
+    useEffect(() => {
+        let activo = true;
+        const supabase = createSupabaseBrowserClient();
+
+        supabase.auth.getUser().then(async ({ data }) => {
+            if (!activo || !data?.user) return;
+            const { data: perfil } = await supabase
+                .from("usuarios")
+                .select("rol")
+                .eq("id", data.user.id)
+                .maybeSingle();
+            if (activo) setEsAdmin(perfil?.rol === "admin");
+        });
+
+        return () => {
+            activo = false;
+        };
+    }, []);
 
     return (
         <>
@@ -275,6 +300,92 @@ export default function Sidebar({ open = false, onClose }) {
                             </ul>
                         </div>
                     ))}
+
+                    {esAdmin && (
+                        <div style={{ marginBottom: "0.5rem" }}>
+                            <p style={{
+                                fontSize: "0.6rem",
+                                fontWeight: 700,
+                                letterSpacing: "0.15em",
+                                textTransform: "uppercase",
+                                color: "var(--text-muted)",
+                                padding: "0 0.25rem",
+                                marginBottom: "0.5rem",
+                            }}>
+                                ADMINISTRACIÓN
+                            </p>
+
+                            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                                <li>
+                                    {(() => {
+                                        const href = "/dashboard/admin/estadisticas";
+                                        const active = pathname.startsWith("/dashboard/admin");
+                                        return (
+                                            <Link
+                                                href={href}
+                                                onClick={onClose}
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "0.75rem",
+                                                    padding: "0.65rem 0.75rem",
+                                                    borderRadius: "0.6rem",
+                                                    textDecoration: "none",
+                                                    background: active
+                                                        ? "color-mix(in srgb, var(--accent) 10%, var(--surface-2))"
+                                                        : "var(--surface-2)",
+                                                    border: `1px solid ${active
+                                                        ? "color-mix(in srgb, var(--accent) 30%, var(--border))"
+                                                        : "var(--border)"}`,
+                                                    transition: "all 150ms ease",
+                                                }}
+                                            >
+                                                <span style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    width: "32px",
+                                                    height: "32px",
+                                                    borderRadius: "7px",
+                                                    background: active
+                                                        ? "color-mix(in srgb, var(--accent) 15%, var(--surface))"
+                                                        : "var(--surface)",
+                                                    color: active ? "var(--accent)" : "var(--text-muted)",
+                                                    flexShrink: 0,
+                                                    border: "1px solid var(--border)",
+                                                }}>
+                                                    <BarChart3 size={18} />
+                                                </span>
+
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <p style={{
+                                                        fontSize: "0.82rem",
+                                                        fontWeight: 600,
+                                                        color: active ? "var(--accent)" : "var(--text-secondary)",
+                                                        lineHeight: 1.2,
+                                                        margin: 0,
+                                                    }}>
+                                                        Estadística de Uso
+                                                    </p>
+                                                    <p style={{
+                                                        fontSize: "0.68rem",
+                                                        color: "var(--text-muted)",
+                                                        marginTop: "1px",
+                                                        whiteSpace: "nowrap",
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        margin: 0,
+                                                    }}>
+                                                        Tráfico y alcance de la app
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        );
+                                    })()}
+                                </li>
+                            </ul>
+                        </div>
+                    )}
                 </nav>
             </aside>
         </>
