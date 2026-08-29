@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { BarChart3, X } from "lucide-react";
+import { BarChart3, X, Database, ShoppingCart, Activity } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import BetaFeedbackCard from "@/components/layout/BetaFeedbackCard";
 
@@ -18,7 +17,7 @@ const nav = [
                 desc: "Remates judiciales",
                 badge: true,
                 icon: (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                         <rect x="3" y="3" width="7" height="7" rx="1.5" />
                         <rect x="14" y="3" width="7" height="7" rx="1.5" />
                         <rect x="3" y="14" width="7" height="7" rx="1.5" />
@@ -31,7 +30,7 @@ const nav = [
                 label: "Mercado Público",
                 desc: "Compras del Estado (3 módulos)",
                 icon: (
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                         <circle cx="9" cy="21" r="1" />
                         <circle cx="20" cy="21" r="1" />
                         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
@@ -51,9 +50,6 @@ const mpItems = [
 export default function Sidebar({ open = false, onClose }) {
     const pathname = usePathname();
     const enMP = pathname.startsWith("/dashboard/mercado-publico");
-
-    // El enlace a la sección de administración solo se muestra a los admin.
-    // La protección real de la ruta está en proxy.js y en el layout del servidor.
     const [esAdmin, setEsAdmin] = useState(false);
 
     useEffect(() => {
@@ -79,101 +75,78 @@ export default function Sidebar({ open = false, onClose }) {
         <>
             {open && (
                 <div
-                    className="fixed inset-0 z-40 bg-black/55 lg:hidden"
+                    className="fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm lg:hidden"
                     onClick={onClose}
                     aria-hidden="true"
                 />
             )}
 
             <aside
-                className={`fixed inset-y-0 left-0 z-50 flex min-h-dvh shrink-0 flex-col transition-transform duration-200 ease-out lg:static lg:z-auto lg:translate-x-0 ${
+                className={`fixed inset-y-0 left-0 z-50 flex min-h-dvh shrink-0 flex-col bg-[#0b0f19]/95 backdrop-blur-xl border-r border-slate-800/80 transition-transform duration-300 ease-out lg:static lg:z-auto lg:translate-x-0 ${
                     open ? "translate-x-0" : "-translate-x-full pointer-events-none lg:pointer-events-auto"
                 }`}
-                style={{
-                    width: "var(--sidebar-w)",
-                    background: "var(--surface)",
-                    borderRight: "1px solid var(--border)",
-                }}
+                style={{ width: "var(--sidebar-w)" }}
             >
-                <div style={{
-                    padding: "1rem 1rem 0.85rem",
-                    borderBottom: "1px solid var(--border)",
-                }}>
-                    <div className="mb-2 flex items-start justify-between gap-2">
-                        <div style={{
-                            width: "100%",
-                            borderRadius: "10px",
-                            overflow: "hidden",
-                            border: "1px solid var(--border)",
-                            lineHeight: 0,
-                        }}>
-                            <Image
-                                src="/logo-hublab.webp"
-                                alt="HubLab logo"
-                                width={220}
-                                height={80}
-                                style={{
-                                    width: "100%",
-                                    height: "auto",
-                                    objectFit: "contain",
-                                    display: "block",
-                                }}
-                            />
+                {/* Encabezado con Nuevo Logo SVG */}
+                <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
+                    <div className="flex items-center gap-3 select-none">
+                        {/* Isotipo SVG Tecnológico y Colorido */}
+                        <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-violet-500/20 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+                            <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+                                <circle cx="12" cy="12" r="9" stroke="url(#logo-grad-1)" strokeWidth="2" strokeDasharray="3 3" />
+                                <path
+                                    d="M12 3C7.02944 3 3 7.02944 3 12C3 14.5 4 16.8 5.7 18.4"
+                                    stroke="url(#logo-grad-2)"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                />
+                                <circle cx="12" cy="12" r="3.5" fill="#38bdf8" />
+                                <defs>
+                                    <linearGradient id="logo-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#06b6d4" />
+                                        <stop offset="100%" stopColor="#8b5cf6" />
+                                    </linearGradient>
+                                    <linearGradient id="logo-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stopColor="#38bdf8" />
+                                        <stop offset="100%" stopColor="#ec4899" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
                         </div>
-                        <button
-                            type="button"
-                            aria-label="Cerrar menú"
-                            onClick={onClose}
-                            className="mt-1 shrink-0 rounded-lg p-1.5 lg:hidden"
-                            style={{
-                                border: "1px solid var(--border)",
-                                background: "var(--surface-2)",
-                                color: "var(--text-muted)",
-                                cursor: "pointer",
-                            }}
-                        >
-                            <X size={16} />
-                        </button>
+
+                        {/* Textos de Marca */}
+                        <div className="flex flex-col">
+                            <div className="flex items-center text-lg font-black tracking-tight leading-none">
+                                <span className="text-white">Estado</span>
+                                <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-[0_0_10px_rgba(56,189,248,0.3)]">
+                                    HUB
+                                </span>
+                            </div>
+                            <span className="text-[10px] font-mono tracking-widest text-slate-500 uppercase mt-1">
+                                APIs del Estado
+                            </span>
+                        </div>
                     </div>
 
-                    <div style={{ textAlign: "center" }}>
-                        <div style={{
-                            fontFamily: "monospace",
-                            fontWeight: 800,
-                            fontSize: "1rem",
-                            lineHeight: 1.1,
-                        }}>
-                            <span style={{ color: "var(--text-secondary)" }}>Estado</span>
-                            <span style={{ color: "var(--accent)" }}>HUB</span>
-                        </div>
-                        <p style={{
-                            fontSize: "0.6rem",
-                            color: "var(--text-muted)",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.1em",
-                            marginTop: "3px",
-                        }}>
-                            APIs Públicas del Estado
-                        </p>
-                    </div>
+                    <button
+                        type="button"
+                        aria-label="Cerrar menú"
+                        onClick={onClose}
+                        className="rounded-lg p-1.5 border border-slate-800 bg-slate-900 text-slate-400 hover:text-white lg:hidden transition-colors"
+                    >
+                        <X size={16} />
+                    </button>
                 </div>
 
-                <nav style={{ flex: 1, padding: "1rem 0.75rem", overflowY: "auto" }}>
+                {/* Navegación Principal */}
+                <nav className="flex-1 p-3.5 space-y-6 overflow-y-auto">
                     {nav.map((grupo) => (
-                        <div key={grupo.grupo} style={{ marginBottom: "0.5rem" }}>
-                            <p style={{
-                                fontSize: "0.6rem",
-                                fontWeight: 700,
-                                letterSpacing: "0.15em",
-                                textTransform: "uppercase",
-                                color: "var(--text-muted)",
-                                padding: "0 0.25rem",
-                                marginBottom: "0.5rem",
-                            }}>
+                        <div key={grupo.grupo} className="space-y-1.5">
+                            <p className="px-2 text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">
                                 {grupo.grupo}
                             </p>
 
-                            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                            <ul className="space-y-1">
                                 {grupo.items.map((item) => {
                                     const isTGR = item.href === "/dashboard/tgr";
                                     const isMP = item.href.startsWith("/dashboard/mercado-publico");
@@ -188,85 +161,47 @@ export default function Sidebar({ open = false, onClose }) {
                                             <Link
                                                 href={item.href}
                                                 onClick={onClose}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "0.75rem",
-                                                    padding: "0.65rem 0.75rem",
-                                                    borderRadius: "0.6rem",
-                                                    textDecoration: "none",
-                                                    background: active
-                                                        ? "color-mix(in srgb, var(--accent) 10%, var(--surface-2))"
-                                                        : "var(--surface-2)",
-                                                    border: `1px solid ${active
-                                                        ? "color-mix(in srgb, var(--accent) 30%, var(--border))"
-                                                        : "var(--border)"}`,
-                                                    transition: "all 150ms ease",
-                                                }}
+                                                className={`group relative flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 border ${
+                                                    active
+                                                        ? "bg-slate-900/80 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.12)] text-white"
+                                                        : "bg-transparent border-transparent text-slate-400 hover:bg-slate-900/50 hover:text-slate-200 hover:border-slate-800"
+                                                }`}
                                             >
-                                                <span style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    width: "32px",
-                                                    height: "32px",
-                                                    borderRadius: "7px",
-                                                    background: active
-                                                        ? "color-mix(in srgb, var(--accent) 15%, var(--surface))"
-                                                        : "var(--surface)",
-                                                    color: active ? "var(--accent)" : "var(--text-muted)",
-                                                    flexShrink: 0,
-                                                    border: "1px solid var(--border)",
-                                                }}>
+                                                {/* Indicador de barra lateral activa */}
+                                                {active && (
+                                                    <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+                                                )}
+
+                                                <span
+                                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                                                        active
+                                                            ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
+                                                            : "bg-slate-900/80 border-slate-800 text-slate-500 group-hover:text-slate-300 group-hover:border-slate-700"
+                                                    }`}
+                                                >
                                                     {item.icon}
                                                 </span>
 
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <p style={{
-                                                        fontSize: "0.82rem",
-                                                        fontWeight: 600,
-                                                        color: active ? "var(--accent)" : "var(--text-secondary)",
-                                                        lineHeight: 1.2,
-                                                        margin: 0,
-                                                    }}>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-xs font-semibold tracking-tight ${active ? "text-cyan-300" : "text-slate-200"}`}>
                                                         {item.label}
                                                     </p>
-                                                    <p style={{
-                                                        fontSize: "0.68rem",
-                                                        color: "var(--text-muted)",
-                                                        marginTop: "1px",
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        margin: 0,
-                                                    }}>
+                                                    <p className="text-[11px] text-slate-500 truncate">
                                                         {item.desc}
                                                     </p>
                                                 </div>
 
                                                 {item.badge && isTGR && active && (
-                                                    <span style={{
-                                                        width: "7px",
-                                                        height: "7px",
-                                                        borderRadius: "50%",
-                                                        background: "var(--accent)",
-                                                        boxShadow: "0 0 6px var(--accent)",
-                                                        flexShrink: 0,
-                                                    }} />
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500" />
+                                                    </span>
                                                 )}
                                             </Link>
 
+                                            {/* Submenú de Mercado Público */}
                                             {isMP && enMP && (
-                                                <ul style={{
-                                                    listStyle: "none",
-                                                    paddingLeft: "0.75rem",
-                                                    marginTop: "0.25rem",
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    gap: "1px",
-                                                    borderLeft: "1px solid var(--border)",
-                                                    marginLeft: "1.25rem",
-                                                }}>
+                                                <ul className="mt-1 ml-6 pl-3 space-y-1 border-l border-slate-800/80">
                                                     {mpItems.map((sub) => {
                                                         const subActive = pathname === sub.href;
                                                         return (
@@ -274,19 +209,11 @@ export default function Sidebar({ open = false, onClose }) {
                                                                 <Link
                                                                     href={sub.href}
                                                                     onClick={onClose}
-                                                                    style={{
-                                                                        display: "block",
-                                                                        padding: "0.35rem 0.6rem",
-                                                                        borderRadius: "0.4rem",
-                                                                        fontSize: "0.78rem",
-                                                                        fontWeight: subActive ? 600 : 400,
-                                                                        color: subActive ? "var(--accent)" : "var(--text-secondary)",
-                                                                        textDecoration: "none",
-                                                                        background: subActive
-                                                                            ? "color-mix(in srgb, var(--accent) 8%, transparent)"
-                                                                            : "transparent",
-                                                                        transition: "all 120ms ease",
-                                                                    }}
+                                                                    className={`block rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
+                                                                        subActive
+                                                                            ? "bg-cyan-500/10 font-semibold text-cyan-400"
+                                                                            : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/40"
+                                                                    }`}
                                                                 >
                                                                     {sub.label}
                                                                 </Link>
@@ -302,21 +229,13 @@ export default function Sidebar({ open = false, onClose }) {
                         </div>
                     ))}
 
+                    {/* Módulo Administración */}
                     {esAdmin && (
-                        <div style={{ marginBottom: "0.5rem" }}>
-                            <p style={{
-                                fontSize: "0.6rem",
-                                fontWeight: 700,
-                                letterSpacing: "0.15em",
-                                textTransform: "uppercase",
-                                color: "var(--text-muted)",
-                                padding: "0 0.25rem",
-                                marginBottom: "0.5rem",
-                            }}>
+                        <div className="space-y-1.5 pt-2">
+                            <p className="px-2 text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase">
                                 ADMINISTRACIÓN
                             </p>
-
-                            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                            <ul className="space-y-1">
                                 <li>
                                     {(() => {
                                         const href = "/dashboard/admin/estadisticas";
@@ -325,58 +244,31 @@ export default function Sidebar({ open = false, onClose }) {
                                             <Link
                                                 href={href}
                                                 onClick={onClose}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "0.75rem",
-                                                    padding: "0.65rem 0.75rem",
-                                                    borderRadius: "0.6rem",
-                                                    textDecoration: "none",
-                                                    background: active
-                                                        ? "color-mix(in srgb, var(--accent) 10%, var(--surface-2))"
-                                                        : "var(--surface-2)",
-                                                    border: `1px solid ${active
-                                                        ? "color-mix(in srgb, var(--accent) 30%, var(--border))"
-                                                        : "var(--border)"}`,
-                                                    transition: "all 150ms ease",
-                                                }}
+                                                className={`group relative flex items-center gap-3 rounded-xl p-2.5 transition-all duration-200 border ${
+                                                    active
+                                                        ? "bg-slate-900/80 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.12)] text-white"
+                                                        : "bg-transparent border-transparent text-slate-400 hover:bg-slate-900/50 hover:text-slate-200 hover:border-slate-800"
+                                                }`}
                                             >
-                                                <span style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    width: "32px",
-                                                    height: "32px",
-                                                    borderRadius: "7px",
-                                                    background: active
-                                                        ? "color-mix(in srgb, var(--accent) 15%, var(--surface))"
-                                                        : "var(--surface)",
-                                                    color: active ? "var(--accent)" : "var(--text-muted)",
-                                                    flexShrink: 0,
-                                                    border: "1px solid var(--border)",
-                                                }}>
-                                                    <BarChart3 size={18} />
+                                                {active && (
+                                                    <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+                                                )}
+
+                                                <span
+                                                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                                                        active
+                                                            ? "bg-cyan-500/15 border-cyan-500/30 text-cyan-400"
+                                                            : "bg-slate-900/80 border-slate-800 text-slate-500 group-hover:text-slate-300 group-hover:border-slate-700"
+                                                    }`}
+                                                >
+                                                    <BarChart3 size={16} />
                                                 </span>
 
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <p style={{
-                                                        fontSize: "0.82rem",
-                                                        fontWeight: 600,
-                                                        color: active ? "var(--accent)" : "var(--text-secondary)",
-                                                        lineHeight: 1.2,
-                                                        margin: 0,
-                                                    }}>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`text-xs font-semibold tracking-tight ${active ? "text-cyan-300" : "text-slate-200"}`}>
                                                         Estadística de Uso
                                                     </p>
-                                                    <p style={{
-                                                        fontSize: "0.68rem",
-                                                        color: "var(--text-muted)",
-                                                        marginTop: "1px",
-                                                        whiteSpace: "nowrap",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        margin: 0,
-                                                    }}>
+                                                    <p className="text-[11px] text-slate-500 truncate">
                                                         Tráfico y alcance de la app
                                                     </p>
                                                 </div>
@@ -389,7 +281,8 @@ export default function Sidebar({ open = false, onClose }) {
                     )}
                 </nav>
 
-                <div style={{ borderTop: "1px solid var(--border)" }}>
+                {/* Footer Feedback */}
+                <div className="p-3 border-t border-slate-800/80">
                     <BetaFeedbackCard />
                 </div>
             </aside>
